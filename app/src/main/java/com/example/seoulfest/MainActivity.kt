@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -55,7 +56,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.draw.clip
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.google.firebase.auth.FirebaseUser
 
 
 class MainActivity : ComponentActivity() {
@@ -118,6 +121,7 @@ class MainActivity : ComponentActivity() {
                                 ?: emptyList()
                         SeoulScreen(navController, selectedDistricts)
                     }
+                    composable("mypage") { MyPageScreen(navController, auth) } // 마이페이지 추가
                 }
             }
         }
@@ -238,6 +242,7 @@ class MainActivity : ComponentActivity() {
                     horizontalArrangement = Arrangement.Start,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(top = 8.dp)
                         .padding(bottom = 16.dp)
                 ) {
                     Button(onClick = {
@@ -410,7 +415,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     @Composable
     fun EventItem(
         title: String,
@@ -508,4 +512,60 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun MyPageScreen(navController: NavHostController, auth: FirebaseAuth) {
+        val user = auth.currentUser
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("My Page") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigateUp() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                )
+            },
+            content = { innerPadding ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(16.dp)
+                ) {
+                    ProfileSection(user)
+                }
+            }
+        )
+    }
+
+    @Composable
+    fun ProfileSection(user: FirebaseUser?) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            AsyncImage(
+                model = user?.photoUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(Color.Gray)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = user?.displayName ?: "User Name", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = user?.email ?: "user@example.com", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = { /* 프로필 수정 기능 */ }) {
+                Text("Edit Profile")
+            }
+        }
+    }
+
 }
