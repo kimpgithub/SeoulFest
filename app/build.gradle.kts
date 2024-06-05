@@ -95,4 +95,17 @@ dependencies {
     implementation ("io.coil-kt:coil-compose:2.6.0")
     implementation ("androidx.compose.material3:material3:1.2.1")
     implementation ("androidx.compose.material3:material3-window-size-class:1.2.1")
+
+    // Google Maps and Maps Utils
+    implementation ("com.google.android.gms:play-services-maps:18.0.0")
+    implementation ("com.google.maps.android:android-maps-utils:2.2.5")
+
+    // Accompanist for handling permissions in Compose
+    implementation ("com.google.accompanist:accompanist-permissions:0.30.0")
+
+    implementation ("com.google.maps.android:maps-ktx:5.0.0")
+    implementation ("com.google.maps.android:maps-compose:4.4.1")
+    implementation ("androidx.compose.material:material-icons-core:1.5.3")
+    implementation ("androidx.compose.material:material-icons-extended:1.5.3")
+
 }

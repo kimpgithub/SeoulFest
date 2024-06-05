@@ -24,7 +24,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -59,7 +59,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.draw.clip
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionState
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import com.google.firebase.auth.FirebaseUser
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
 
 
 class MainActivity : ComponentActivity() {
@@ -122,7 +131,8 @@ class MainActivity : ComponentActivity() {
                                 ?: emptyList()
                         SeoulScreen(navController, selectedDistricts)
                     }
-                    composable("mypage") { MyPageScreen(navController, auth) } // 마이페이지 추가
+                    composable("map") { MapScreen(navController) }
+                    composable("mypage") { MyPageScreen(navController, auth) }
                 }
             }
         }
@@ -168,7 +178,7 @@ class MainActivity : ComponentActivity() {
         auth: FirebaseAuth,
         email: String,
         password: String,
-        context: android.content.Context,
+        context: Context,
         onSuccess: () -> Unit
     ) {
         auth.signInWithEmailAndPassword(email, password)
@@ -199,7 +209,7 @@ class MainActivity : ComponentActivity() {
             Log.d("MainScreen", "Selected Districts: $selectedDistricts") // 선택된 구 로그 추가
             try {
                 val response = apiService.getEvents(
-                    apiKey = "",
+                    apiKey = "74714163566b696d3431534b446673",
                     type = "xml",
                     service = "culturalEventInfo",
                     startIndex = 1,
@@ -316,24 +326,24 @@ class MainActivity : ComponentActivity() {
         NavigationBar {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
-
+            
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Map, contentDescription = "Map") },
+                label = { Text("Map") },
+                selected = currentDestination?.route == "map",
+                onClick = { navController.navigate("map") }
+            )
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Favorite, contentDescription = "Interested Events") },
+                label = { Text("Interested Events") },
+                selected = currentDestination?.route == "interested_events",
+                onClick = { navController.navigate("interested_events") }
+            )
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Person, contentDescription = "My Page") },
                 label = { Text("My Page") },
                 selected = currentDestination?.route == "mypage",
                 onClick = { navController.navigate("mypage") }
-            )
-            NavigationBarItem(
-                icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorites") },
-                label = { Text("Favorites") },
-                selected = currentDestination?.route == "favorites",
-                onClick = { navController.navigate("favorites") }
-            )
-            NavigationBarItem(
-                icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                label = { Text("Settings") },
-                selected = currentDestination?.route == "settings",
-                onClick = { navController.navigate("settings") }
             )
         }
     }
@@ -515,7 +525,45 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    @OptIn(ExperimentalPermissionsApi::class)
+    @Composable
+    fun MapScreen(navController: NavHostController) {
+        val locationPermissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
 
+        if (locationPermissionState.status.isGranted) {
+            val seoul = LatLng(37.5665, 126.9780) // 서울의 위도와 경도
+            val cameraPositionState = rememberCameraPositionState {
+                position = CameraPosition.fromLatLngZoom(seoul, 10f)
+            }
+
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState
+            )
+        } else {
+            PermissionNotGrantedContent(locationPermissionState)
+        }
+    }
+
+    @OptIn(ExperimentalPermissionsApi::class)
+    @Composable
+    fun PermissionNotGrantedContent(permissionState: PermissionState) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            val textToShow = if (permissionState.status.shouldShowRationale) {
+                "Location access is required to show the map. Please grant the permission."
+            } else {
+                "Location permission required for this feature to be available. Please grant the permission."
+            }
+            Text(textToShow)
+            Button(onClick = { permissionState.launchPermissionRequest() }) {
+                Text("Grant Permission")
+            }
+        }
+    }
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun MyPageScreen(navController: NavHostController, auth: FirebaseAuth) {
@@ -613,13 +661,13 @@ class MainActivity : ComponentActivity() {
     }
 
     // 알림 설정 상태를 로드하는 함수 (SharedPreferences 사용 예시)
-    fun loadNotificationSetting(context: Context): Boolean {
+    private fun loadNotificationSetting(context: Context): Boolean {
         val sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         return sharedPreferences.getBoolean("notifications_enabled", false)
     }
 
     // 알림 설정 상태를 저장하는 함수 (SharedPreferences 사용 예시)
-    fun saveNotificationSetting(context: Context, isEnabled: Boolean) {
+    private fun saveNotificationSetting(context: Context, isEnabled: Boolean) {
         val sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         sharedPreferences.edit().putBoolean("notifications_enabled", isEnabled).apply()
     }
