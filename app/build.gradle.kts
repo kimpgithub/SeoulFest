@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -107,5 +108,4 @@ dependencies {
     implementation ("com.google.maps.android:maps-compose:4.4.1")
     implementation ("androidx.compose.material:material-icons-core:1.5.3")
     implementation ("androidx.compose.material:material-icons-extended:1.5.3")
-
 }

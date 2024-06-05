@@ -31,5 +31,12 @@ data class CulturalEvent(
     var useFee: String? = null,
 
     @field:Element(name = "MAIN_IMG", required = false)
-    var mainImg: String? = null
+    var mainImg: String? = null,
+
+    @field:Element(name = "LAT", required = false)
+    var lat: String? = null,
+
+    @field:Element(name = "LNG", required = false)
+    var lng: String? = null
+
 )
