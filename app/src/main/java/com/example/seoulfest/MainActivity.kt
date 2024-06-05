@@ -209,7 +209,7 @@ class MainActivity : ComponentActivity() {
             Log.d("MainScreen", "Selected Districts: $selectedDistricts") // 선택된 구 로그 추가
             try {
                 val response = apiService.getEvents(
-                    apiKey = "74714163566b696d3431534b446673",
+                    apiKey = "",
                     type = "xml",
                     service = "culturalEventInfo",
                     startIndex = 1,
@@ -335,7 +335,7 @@ class MainActivity : ComponentActivity() {
             )
             NavigationBarItem(
                 icon = { Icon(Icons.Default.Favorite, contentDescription = "Interested Events") },
-                label = { Text("Interested Events") },
+                label = { Text("Bookmarks") },
                 selected = currentDestination?.route == "interested_events",
                 onClick = { navController.navigate("interested_events") }
             )
