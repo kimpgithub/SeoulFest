@@ -7,9 +7,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -17,9 +17,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -47,6 +50,12 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.Composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 
 class MainActivity : ComponentActivity() {
@@ -70,7 +79,9 @@ class MainActivity : ComponentActivity() {
                             defaultValue = null
                         })
                     ) { backStackEntry ->
-                        val selectedDistricts = backStackEntry.arguments?.getString("selectedDistricts")?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
+                        val selectedDistricts =
+                            backStackEntry.arguments?.getString("selectedDistricts")?.split(",")
+                                ?.filter { it.isNotEmpty() } ?: emptyList()
                         MainScreen(navController, selectedDistricts)
                     }
                     composable(
@@ -102,7 +113,9 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     ) { backStackEntry ->
-                        val selectedDistricts = backStackEntry.arguments?.getString("selectedDistricts")?.split(",") ?: emptyList()
+                        val selectedDistricts =
+                            backStackEntry.arguments?.getString("selectedDistricts")?.split(",")
+                                ?: emptyList()
                         SeoulScreen(navController, selectedDistricts)
                     }
                 }
@@ -207,76 +220,113 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            ) {
-                Button(onClick = {
-                    val selectedDistrictsStr = selectedDistricts.joinToString(",")
-                    navController.navigate("seoul?selectedDistricts=$selectedDistrictsStr")
-                }) {
-                    Text("서울")
-                }
-            }
 
-            LazyRow(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+        Scaffold(
+            bottomBar = {
+                BottomNavigationBar(navController)
+            }
+        ) { innerPadding ->
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp)
             ) {
-                items(selectedDistricts) { district ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start,
-                        modifier = Modifier
-                            .background(Color.Gray)
-                            .padding(8.dp)
-                            .padding(end = 8.dp)
-                    ) {
-                        Text(
-                            text = district,
-                            color = Color.White,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-                        Text(
-                            "X",
-                            color = Color.White,
-                            modifier = Modifier.clickable {
-                                // 선택된 구를 삭제하고 새로고침
-                                val newSelectedDistricts = selectedDistricts.toMutableList().apply { remove(district) }
-                                val newSelectedDistrictsStr = newSelectedDistricts.joinToString(",")
-                                navController.navigate("main?selectedDistricts=$newSelectedDistrictsStr") {
-                                    popUpTo("main") { inclusive = true }
+                // 기존 UI 코드
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
+                    Button(onClick = {
+                        val selectedDistrictsStr = selectedDistricts.joinToString(",")
+                        navController.navigate("seoul?selectedDistricts=$selectedDistrictsStr")
+                    }) {
+                        Text("서울")
+                    }
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(bottom = 8.dp)
+                ) {
+                    selectedDistricts.forEach { district ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Start,
+                            modifier = Modifier
+                                .background(Color.Gray)
+                                .padding(8.dp)
+                                .padding(end = 8.dp)
+                        ) {
+                            Text(
+                                text = district,
+                                color = Color.White,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(
+                                "X",
+                                color = Color.White,
+                                modifier = Modifier.clickable {
+                                    // 선택된 구를 삭제하고 새로고침
+                                    val newSelectedDistricts = selectedDistricts.toMutableList().apply { remove(district) }
+                                    val newSelectedDistrictsStr = newSelectedDistricts.joinToString(",")
+                                    navController.navigate("main?selectedDistricts=$newSelectedDistrictsStr") {
+                                        popUpTo("main") { inclusive = true }
+                                    }
                                 }
-                            }
+                            )
+                        }
+                    }
+                }
+
+                LazyColumn {
+                    items(events) { event ->
+                        EventItem(
+                            title = event.title ?: "",
+                            date = event.date ?: "",
+                            time = "",
+                            location = event.place ?: "",
+                            pay = event.useFee ?: "",
+                            imageUrl = event.mainImg ?: "",
+                            navController = navController
                         )
                     }
                 }
             }
+        }
+    }
 
-            LazyColumn {
-                items(events) { event ->
-                    EventItem(
-                        title = event.title ?: "",
-                        date = event.date ?: "",
-                        time = "",
-                        location = event.place ?: "",
-                        pay = event.useFee ?: "",
-                        imageUrl = event.mainImg ?: "",
-                        navController = navController
-                    )
-                }
-            }
+    @Composable
+    fun BottomNavigationBar(navController: NavHostController) {
+        NavigationBar {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Person, contentDescription = "My Page") },
+                label = { Text("My Page") },
+                selected = currentDestination?.route == "mypage",
+                onClick = { navController.navigate("mypage") }
+            )
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorites") },
+                label = { Text("Favorites") },
+                selected = currentDestination?.route == "favorites",
+                onClick = { navController.navigate("favorites") }
+            )
+            NavigationBarItem(
+                icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
+                label = { Text("Settings") },
+                selected = currentDestination?.route == "settings",
+                onClick = { navController.navigate("settings") }
+            )
         }
     }
 
@@ -321,9 +371,13 @@ class MainActivity : ComponentActivity() {
                             .height(40.dp) // 고정된 높이 설정
                             .clickable {
                                 selectedDistricts = if (selectedDistricts.contains(district)) {
-                                    selectedDistricts.toMutableList().apply { remove(district) }
+                                    selectedDistricts
+                                        .toMutableList()
+                                        .apply { remove(district) }
                                 } else {
-                                    selectedDistricts.toMutableList().apply { add(district) }
+                                    selectedDistricts
+                                        .toMutableList()
+                                        .apply { add(district) }
                                 }
                             }
                             .background(if (selectedDistricts.contains(district)) Color.Gray else Color.Transparent)
@@ -355,10 +409,9 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
 
-@Composable
+    @Composable
     fun EventItem(
         title: String,
         date: String,
@@ -429,7 +482,7 @@ class MainActivity : ComponentActivity() {
                 title = { Text("Detail") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -455,4 +508,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
+}
