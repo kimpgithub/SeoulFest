@@ -1,5 +1,6 @@
 package com.example.seoulfest
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -280,8 +281,10 @@ class MainActivity : ComponentActivity() {
                                 color = Color.White,
                                 modifier = Modifier.clickable {
                                     // 선택된 구를 삭제하고 새로고침
-                                    val newSelectedDistricts = selectedDistricts.toMutableList().apply { remove(district) }
-                                    val newSelectedDistrictsStr = newSelectedDistricts.joinToString(",")
+                                    val newSelectedDistricts =
+                                        selectedDistricts.toMutableList().apply { remove(district) }
+                                    val newSelectedDistrictsStr =
+                                        newSelectedDistricts.joinToString(",")
                                     navController.navigate("main?selectedDistricts=$newSelectedDistrictsStr") {
                                         popUpTo("main") { inclusive = true }
                                     }
@@ -517,6 +520,8 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MyPageScreen(navController: NavHostController, auth: FirebaseAuth) {
         val user = auth.currentUser
+        val context = LocalContext.current
+
 
         Scaffold(
             topBar = {
@@ -537,6 +542,12 @@ class MainActivity : ComponentActivity() {
                         .padding(16.dp)
                 ) {
                     ProfileSection(user)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    NotificationSettingsSection()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AppSettingsSection(navController)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    LogoutSection(navController, context, auth) // NavController 인자로 전달
                 }
             }
         )
@@ -556,14 +567,97 @@ class MainActivity : ComponentActivity() {
                     .size(100.dp)
                     .clip(CircleShape)
                     .background(Color.Gray)
+                    .clickable { /* 프로필 사진 변경 기능 */ }
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = user?.displayName ?: "User Name", style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = user?.displayName ?: "User Name",
+                style = MaterialTheme.typography.titleLarge
+            )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = user?.email ?: "user@example.com", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = user?.email ?: "user@example.com",
+                style = MaterialTheme.typography.bodyMedium
+            )
             Spacer(modifier = Modifier.height(8.dp))
             Button(onClick = { /* 프로필 수정 기능 */ }) {
                 Text("Edit Profile")
+            }
+        }
+    }
+
+    @Composable
+    fun NotificationSettingsSection() {
+        val context = LocalContext.current
+        var notificationsEnabled by remember { mutableStateOf(false) }
+
+        // 초기화 및 상태 로드
+        LaunchedEffect(Unit) {
+            // 여기에 SharedPreferences 또는 데이터 저장소에서 알림 설정 상태를 로드하는 코드를 추가합니다.
+            notificationsEnabled = loadNotificationSetting(context)
+        }
+
+        Column {
+            Text("Notification Settings", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Switch(
+                checked = notificationsEnabled,
+                onCheckedChange = { isChecked ->
+                    notificationsEnabled = isChecked
+                    saveNotificationSetting(context, isChecked)
+                },
+                modifier = Modifier.padding(8.dp)
+            )
+            Text("Receive event notifications", style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+
+    // 알림 설정 상태를 로드하는 함수 (SharedPreferences 사용 예시)
+    fun loadNotificationSetting(context: Context): Boolean {
+        val sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        return sharedPreferences.getBoolean("notifications_enabled", false)
+    }
+
+    // 알림 설정 상태를 저장하는 함수 (SharedPreferences 사용 예시)
+    fun saveNotificationSetting(context: Context, isEnabled: Boolean) {
+        val sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        sharedPreferences.edit().putBoolean("notifications_enabled", isEnabled).apply()
+    }
+
+    @Composable
+    fun AppSettingsSection(navController: NavHostController) {
+        Column {
+            Text("App Settings", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = { /* 테마 설정 화면으로 이동 */ }) {
+                Text("Theme Settings")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = { /* 언어 설정 화면으로 이동 */ }) {
+                Text("Language Settings")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = { /* 알림 음량 설정 화면으로 이동 */ }) {
+                Text("Notification Volume Settings")
+            }
+        }
+    }
+
+    @Composable
+    fun LogoutSection(navController: NavHostController, context: Context, auth: FirebaseAuth) {
+        Column {
+            Text("Account", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = {
+                auth.signOut()
+                Toast.makeText(context, "Logged out", Toast.LENGTH_SHORT).show()
+                navController.navigate("login") {
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = true
+                    }
+                }
+            }) {
+                Text("Logout")
             }
         }
     }
