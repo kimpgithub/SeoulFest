@@ -240,7 +240,7 @@ fun EventList(events: List<CulturalEvent>, onEventClick: (CulturalEvent) -> Unit
         modifier = Modifier
             .padding(16.dp)
             .fillMaxWidth()
-            .height(400.dp)
+            .height(500.dp)
     ) {
         items(events) { event ->
             EventCard(event, onEventClick)

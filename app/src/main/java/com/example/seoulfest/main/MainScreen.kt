@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -52,9 +53,7 @@ fun MainScreen(navController: NavHostController, selectedDistricts: List<String>
         viewModel.fetchEvents(apiKey = "74714163566b696d3431534b446673", today = today, selectedDistricts = selectedDistricts)
     }
 
-    Scaffold(
-        bottomBar = { BottomNavigationBar(navController) }
-    ) { innerPadding ->
+    Scaffold{ innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -139,6 +138,12 @@ fun BottomNavigationBar(navController: NavHostController) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
 
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+            label = { Text("Home") },
+            selected = currentDestination?.route == "main",
+            onClick = { navController.navigate("main") }
+        )
         NavigationBarItem(
             icon = { Icon(Icons.Default.Map, contentDescription = "Map") },
             label = { Text("Map") },
