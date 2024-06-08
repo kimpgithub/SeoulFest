@@ -35,10 +35,13 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
@@ -166,6 +169,7 @@ fun LoadingIndicator() {
     }
 }
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun MapContent(
     userLocation: LatLng?,
@@ -175,10 +179,13 @@ fun MapContent(
     events: List<CulturalEvent>,
     onEventClick: (CulturalEvent) -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     Column {
         GoogleMap(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(top = 56.dp) // Adjust padding to account for the top bar
                 .height(300.dp),
             cameraPositionState = cameraPositionState,
             properties = MapProperties(isMyLocationEnabled = userLocation != null),
@@ -191,13 +198,25 @@ fun MapContent(
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
                 )
             }
-
             selectedEventLocation?.let { location ->
                 Marker(
                     state = MarkerState(position = location),
                     title = selectedEventLocationName, // Use the location name here
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
                 )
+            }
+
+            // Update the camera position to fit both markers
+            if (userLocation != null && selectedEventLocation != null) {
+                val bounds = LatLngBounds.Builder()
+                    .include(userLocation)
+                    .include(selectedEventLocation)
+                    .build()
+
+                val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 100)
+                coroutineScope.launch {
+                    cameraPositionState.move(cameraUpdate)
+                }
             }
         }
         EventList(events, onEventClick)
@@ -248,7 +267,6 @@ fun EventList(events: List<CulturalEvent>, onEventClick: (CulturalEvent) -> Unit
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventCard(event: CulturalEvent, onEventClick: (CulturalEvent) -> Unit) {
     Card(
