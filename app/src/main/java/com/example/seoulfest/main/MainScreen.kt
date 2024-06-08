@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
@@ -71,7 +72,7 @@ fun MainScreen(navController: NavHostController, selectedDistricts: List<String>
                     val selectedDistrictsStr = selectedDistricts.joinToString(",")
                     navController.navigate("seoul?selectedDistricts=$selectedDistrictsStr")
                 }) {
-                    Text("서울")
+                    Text("서울 지역 선택")
                 }
             }
 
@@ -132,7 +133,7 @@ fun MainScreen(navController: NavHostController, selectedDistricts: List<String>
 }
 
 @Composable
-fun BottomNavigationBar(navController: NavHostController) {
+fun BottomNavigationBar(navController: NavController) {
     NavigationBar {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination

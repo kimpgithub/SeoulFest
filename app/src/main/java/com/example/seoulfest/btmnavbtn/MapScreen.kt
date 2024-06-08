@@ -62,7 +62,7 @@ fun MapScreen(navController: NavHostController) {
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("Map Screen") },
+                        title = { Text("가까운 행사") },
                         navigationIcon = {
                             IconButton(onClick = { navController.navigateUp() }) {
                                 Icon(
@@ -194,7 +194,7 @@ fun MapContent(
             userLocation?.let { location ->
                 Marker(
                     state = MarkerState(position = location),
-                    title = "You are here",
+                    title = "현재 위치",
                     icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
                 )
             }

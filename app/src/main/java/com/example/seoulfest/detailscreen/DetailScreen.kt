@@ -90,7 +90,7 @@ fun DetailScreen(
             .verticalScroll(rememberScrollState())
     ) {
         TopAppBar(
-            title = { Text("Detail") },
+            title = { Text("상세화면") },
             navigationIcon = {
                 IconButton(onClick = { navController.navigateUp() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

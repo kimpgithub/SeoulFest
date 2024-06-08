@@ -5,10 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.seoulfest.btmnavbtn.FavoritesScreen
@@ -36,7 +40,7 @@ class MainActivity : ComponentActivity() {
             SeoulFestTheme {
                 val navController = rememberNavController()
                 Scaffold(
-                    bottomBar = { BottomNavigationBar(navController) }
+                    bottomBar = { BottomBarVisibility(navController) }
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
@@ -98,5 +102,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+}
+@Composable
+fun BottomBarVisibility(navController: NavController) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    if (currentRoute != "login") {
+        BottomNavigationBar(navController = navController)
     }
 }

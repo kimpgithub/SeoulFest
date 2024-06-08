@@ -51,7 +51,7 @@ fun MyPageScreen(navController: NavHostController, auth: FirebaseAuth) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My Page") },
+                title = { Text("마이 페이지") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
