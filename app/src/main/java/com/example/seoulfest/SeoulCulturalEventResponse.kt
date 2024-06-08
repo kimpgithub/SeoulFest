@@ -36,7 +36,7 @@ data class CulturalEvent(
     @field:Element(name = "LAT", required = false)
     var lat: String? = null,
 
-    @field:Element(name = "LNG", required = false)
+    @field:Element(name = "LOT", required = false)
     var lng: String? = null
 
 )
