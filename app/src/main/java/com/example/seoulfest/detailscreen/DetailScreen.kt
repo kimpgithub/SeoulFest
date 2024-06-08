@@ -141,16 +141,16 @@ fun saveFavorite(title: String, date: String, location: String, pay: String, ima
         val favoriteEvent = hashMapOf(
             "title" to title,
             "date" to date,
-            "location" to location,
-            "pay" to pay,
-            "imageUrl" to imageUrl
+            "place" to location,  // Correct field name
+            "useFee" to pay,      // Correct field name
+            "mainImg" to imageUrl // Correct field name
         )
 
         db.collection("favorites").document(user.uid)
             .collection("events")
             .whereEqualTo("title", title)
             .whereEqualTo("date", date)
-            .whereEqualTo("location", location)
+            .whereEqualTo("place", location)  // Correct field name
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
@@ -191,7 +191,7 @@ fun checkIfFavorite(title: String, date: String, location: String, callback: (Bo
             .collection("events")
             .whereEqualTo("title", title)
             .whereEqualTo("date", date)
-            .whereEqualTo("location", location)
+            .whereEqualTo("place", location)  // Correct field name
             .get()
             .addOnSuccessListener { documents ->
                 callback(!documents.isEmpty)
@@ -204,7 +204,6 @@ fun checkIfFavorite(title: String, date: String, location: String, callback: (Bo
         callback(false)
     }
 }
-
 fun removeFavorite(title: String, date: String, location: String, context: Context, onSuccess: () -> Unit) {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
@@ -215,7 +214,7 @@ fun removeFavorite(title: String, date: String, location: String, context: Conte
             .collection("events")
             .whereEqualTo("title", title)
             .whereEqualTo("date", date)
-            .whereEqualTo("location", location)
+            .whereEqualTo("place", location)  // Correct field name
             .get()
             .addOnSuccessListener { documents ->
                 for (document in documents) {

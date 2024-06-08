@@ -3,8 +3,11 @@ package com.example.seoulfest.btmnavbtn
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -84,17 +88,24 @@ fun FavoritesScreen(navController: NavHostController) {
             )
         }
     ) { paddingValues ->
-        LazyColumn(modifier = Modifier.padding(paddingValues)) {
-            items(events.value) { event ->
-                EventItem(
-                    title = event.title ?: "",
-                    date = event.date ?: "",
-                    location = event.place ?: "",
-                    pay = event.useFee ?: "",
-                    imageUrl = event.mainImg ?: "",
-                    navController = navController,
-                    onDelete = { deleteFavorite(event.id) }
-                )
+        if (events.value.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "No favorite events yet.")
+            }
+        } else {
+            LazyColumn(modifier = Modifier.padding(paddingValues)) {
+                items(events.value) { event ->
+                    EventItem(
+                        event = event,
+                        navController = navController,
+                        onDelete = { deleteFavorite(event.id) }
+                    )
+                }
             }
         }
     }
@@ -124,11 +135,7 @@ fun fetchFavorites(onSuccess: (List<CulturalEvent>) -> Unit, onFailure: (Excepti
 
 @Composable
 fun EventItem(
-    title: String,
-    date: String,
-    location: String,
-    pay: String,
-    imageUrl: String,
+    event: CulturalEvent,
     navController: NavHostController,
     onDelete: () -> Unit
 ) {
@@ -137,31 +144,35 @@ fun EventItem(
             .padding(8.dp)
             .fillMaxWidth()
             .clickable {
-                val encodedTitle = URLEncoder.encode(title, "UTF-8")
-                val encodedDate = URLEncoder.encode(date, "UTF-8")
-                val encodedLocation = URLEncoder.encode(location, "UTF-8")
-                val encodedPay = URLEncoder.encode(pay, "UTF-8")
-                val encodedImageUrl = URLEncoder.encode(imageUrl, "UTF-8")
+                val encodedTitle = URLEncoder.encode(event.title, "UTF-8")
+                val encodedDate = URLEncoder.encode(event.date, "UTF-8")
+                val encodedLocation = URLEncoder.encode(event.place, "UTF-8")
+                val encodedPay = URLEncoder.encode(event.useFee, "UTF-8")
+                val encodedImageUrl = URLEncoder.encode(event.mainImg, "UTF-8")
 
                 navController.navigate(
                     "detail?title=$encodedTitle&date=$encodedDate&location=$encodedLocation&pay=$encodedPay&imageUrl=$encodedImageUrl"
                 )
             }
     ) {
-        Row {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             AsyncImage(
-                model = imageUrl,
+                model = event.mainImg,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp)
             )
-            Column(modifier = Modifier.padding(8.dp)) {
-                Text(text = title, style = MaterialTheme.typography.titleMedium)
-                Text(text = date, style = MaterialTheme.typography.bodySmall)
-                Text(text = location, style = MaterialTheme.typography.bodySmall)
-                Text(text = pay, style = MaterialTheme.typography.bodySmall)
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
-                }
+            Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
+                Text(text = event.title ?: "No title", style = MaterialTheme.typography.titleMedium)
+                Text(text = event.date ?: "No date", style = MaterialTheme.typography.bodySmall)
+                Text(text = event.place ?: "No place", style = MaterialTheme.typography.bodySmall)
+                Text(text = event.useFee ?: "No fee", style = MaterialTheme.typography.bodySmall)
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete")
             }
         }
     }
