@@ -1,5 +1,6 @@
 package com.example.seoulfest.detailscreen
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,7 +24,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.google.firebase.auth.FirebaseAuth
 import java.net.URLDecoder
+import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,7 +81,9 @@ fun DetailScreen(
                 }
             },
             actions = {
-                IconButton(onClick = { /* TODO: 즐겨찾기 기능 구현 */ }) {
+                IconButton(onClick = {
+                    saveFavorite(title, date, location, pay, imageUrl)
+                }){
                     Icon(Icons.Default.FavoriteBorder, contentDescription = "Favorite")
                 }
             }
@@ -98,5 +103,32 @@ fun DetailScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Text(decodedPay, style = MaterialTheme.typography.bodyMedium)
         }
+    }
+}
+fun saveFavorite(title: String, date: String, location: String, pay: String, imageUrl: String) {
+    val auth = FirebaseAuth.getInstance()
+    val db = FirebaseFirestore.getInstance()
+    val user = auth.currentUser
+
+    if (user != null) {
+        val favoriteEvent = hashMapOf(
+            "title" to title,
+            "date" to date,
+            "location" to location,
+            "pay" to pay,
+            "imageUrl" to imageUrl
+        )
+
+        db.collection("favorites").document(user.uid)
+            .collection("events")
+            .add(favoriteEvent)
+            .addOnSuccessListener {
+                Log.d("Firestore", "Favorite event successfully added!")
+            }
+            .addOnFailureListener { e ->
+                Log.w("Firestore", "Error adding favorite event", e)
+            }
+    } else {
+        Log.w("Firestore", "No authenticated user found.")
     }
 }

@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.seoulfest.btmnavbtn.FavoritesScreen
 import com.example.seoulfest.btmnavbtn.MapScreen
 import com.example.seoulfest.btmnavbtn.MyPageScreen
 import com.example.seoulfest.detailscreen.DetailScreen
@@ -92,6 +93,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("map") { MapScreen(navController) }
                         composable("mypage") { MyPageScreen(navController, auth) }
+                        composable("favorites") { FavoritesScreen(navController) }
                     }
                 }
             }

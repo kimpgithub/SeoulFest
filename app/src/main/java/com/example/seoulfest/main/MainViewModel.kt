@@ -1,4 +1,4 @@
-package com.example.seoulfest
+package com.example.seoulfest.main
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

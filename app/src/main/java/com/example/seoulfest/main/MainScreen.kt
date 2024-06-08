@@ -37,7 +37,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
-import com.example.seoulfest.MainViewModel
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -151,10 +150,10 @@ fun BottomNavigationBar(navController: NavHostController) {
             onClick = { navController.navigate("map") }
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Favorite, contentDescription = "Interested Events") },
-            label = { Text("Bookmarks") },
-            selected = currentDestination?.route == "interested_events",
-            onClick = { navController.navigate("interested_events") }
+            icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorites") },
+            label = { Text("Favorites") },
+            selected = currentDestination?.route == "favorites",
+            onClick = { navController.navigate("favorites") }
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.Person, contentDescription = "My Page") },
