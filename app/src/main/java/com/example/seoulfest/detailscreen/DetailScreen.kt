@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -75,6 +76,13 @@ fun DetailScreen(
     }
 
     val context = LocalContext.current
+    val isFavorite = remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        checkIfFavorite(decodedTitle, decodedDate, decodedLocation) { exists ->
+            isFavorite.value = exists
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -90,9 +98,20 @@ fun DetailScreen(
             },
             actions = {
                 IconButton(onClick = {
-                    saveFavorite(decodedTitle, decodedDate, decodedLocation, decodedPay, decodedImageUrl, context)
+                    if (isFavorite.value) {
+                        removeFavorite(decodedTitle, decodedDate, decodedLocation, context) {
+                            isFavorite.value = false
+                        }
+                    } else {
+                        saveFavorite(decodedTitle, decodedDate, decodedLocation, decodedPay, decodedImageUrl, context) {
+                            isFavorite.value = true
+                        }
+                    }
                 }) {
-                    Icon(Icons.Default.FavoriteBorder, contentDescription = "Favorite")
+                    Icon(
+                        imageVector = if (isFavorite.value) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = if (isFavorite.value) "Unfavorite" else "Favorite"
+                    )
                 }
             }
         )
@@ -113,7 +132,7 @@ fun DetailScreen(
         }
     }
 }
-fun saveFavorite(title: String, date: String, location: String, pay: String, imageUrl: String, context: Context) {
+fun saveFavorite(title: String, date: String, location: String, pay: String, imageUrl: String, context: Context, onSuccess: () -> Unit) {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
     val user = auth.currentUser
@@ -141,6 +160,7 @@ fun saveFavorite(title: String, date: String, location: String, pay: String, ima
                         .addOnSuccessListener {
                             Toast.makeText(context, "Favorite added!", Toast.LENGTH_SHORT).show()
                             Log.d("Firestore", "Favorite event successfully added!")
+                            onSuccess()
                         }
                         .addOnFailureListener { e ->
                             Toast.makeText(context, "Failed to add favorite.", Toast.LENGTH_SHORT).show()
@@ -149,6 +169,69 @@ fun saveFavorite(title: String, date: String, location: String, pay: String, ima
                 } else {
                     Toast.makeText(context, "This event is already in your favorites.", Toast.LENGTH_SHORT).show()
                     Log.d("Firestore", "This event is already in your favorites.")
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Failed to check favorites.", Toast.LENGTH_SHORT).show()
+                Log.w("Firestore", "Error checking favorites", e)
+            }
+    } else {
+        Toast.makeText(context, "No authenticated user found.", Toast.LENGTH_SHORT).show()
+        Log.w("Firestore", "No authenticated user found.")
+    }
+}
+
+fun checkIfFavorite(title: String, date: String, location: String, callback: (Boolean) -> Unit) {
+    val auth = FirebaseAuth.getInstance()
+    val db = FirebaseFirestore.getInstance()
+    val user = auth.currentUser
+
+    if (user != null) {
+        db.collection("favorites").document(user.uid)
+            .collection("events")
+            .whereEqualTo("title", title)
+            .whereEqualTo("date", date)
+            .whereEqualTo("location", location)
+            .get()
+            .addOnSuccessListener { documents ->
+                callback(!documents.isEmpty)
+            }
+            .addOnFailureListener { e ->
+                Log.w("Firestore", "Error checking if event is favorite", e)
+                callback(false)
+            }
+    } else {
+        callback(false)
+    }
+}
+
+fun removeFavorite(title: String, date: String, location: String, context: Context, onSuccess: () -> Unit) {
+    val auth = FirebaseAuth.getInstance()
+    val db = FirebaseFirestore.getInstance()
+    val user = auth.currentUser
+
+    if (user != null) {
+        db.collection("favorites").document(user.uid)
+            .collection("events")
+            .whereEqualTo("title", title)
+            .whereEqualTo("date", date)
+            .whereEqualTo("location", location)
+            .get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    db.collection("favorites").document(user.uid)
+                        .collection("events")
+                        .document(document.id)
+                        .delete()
+                        .addOnSuccessListener {
+                            Toast.makeText(context, "Favorite removed!", Toast.LENGTH_SHORT).show()
+                            Log.d("Firestore", "Favorite event successfully removed!")
+                            onSuccess()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(context, "Failed to remove favorite.", Toast.LENGTH_SHORT).show()
+                            Log.w("Firestore", "Error removing favorite event", e)
+                        }
                 }
             }
             .addOnFailureListener { e ->

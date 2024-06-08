@@ -57,7 +57,7 @@ fun FavoritesScreen(navController: NavHostController) {
         val db = FirebaseFirestore.getInstance()
         val user = FirebaseAuth.getInstance().currentUser
 
-        user?.let {
+        user?.let { it ->
             db.collection("favorites").document(it.uid)
                 .collection("events").document(eventId)
                 .delete()
@@ -92,7 +92,6 @@ fun FavoritesScreen(navController: NavHostController) {
                     location = event.place ?: "",
                     pay = event.useFee ?: "",
                     imageUrl = event.mainImg ?: "",
-                    eventId = event.id,
                     navController = navController,
                     onDelete = { deleteFavorite(event.id) }
                 )
@@ -130,7 +129,6 @@ fun EventItem(
     location: String,
     pay: String,
     imageUrl: String,
-    eventId: String,
     navController: NavHostController,
     onDelete: () -> Unit
 ) {
