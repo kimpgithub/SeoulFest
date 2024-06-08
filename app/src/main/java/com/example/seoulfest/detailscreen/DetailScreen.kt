@@ -1,6 +1,8 @@
 package com.example.seoulfest.detailscreen
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -19,8 +22,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -68,6 +74,8 @@ fun DetailScreen(
         imageUrl
     }
 
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -82,8 +90,8 @@ fun DetailScreen(
             },
             actions = {
                 IconButton(onClick = {
-                    saveFavorite(title, date, location, pay, imageUrl)
-                }){
+                    saveFavorite(decodedTitle, decodedDate, decodedLocation, decodedPay, decodedImageUrl, context)
+                }) {
                     Icon(Icons.Default.FavoriteBorder, contentDescription = "Favorite")
                 }
             }
@@ -105,7 +113,7 @@ fun DetailScreen(
         }
     }
 }
-fun saveFavorite(title: String, date: String, location: String, pay: String, imageUrl: String) {
+fun saveFavorite(title: String, date: String, location: String, pay: String, imageUrl: String, context: Context) {
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
     val user = auth.currentUser
@@ -121,14 +129,34 @@ fun saveFavorite(title: String, date: String, location: String, pay: String, ima
 
         db.collection("favorites").document(user.uid)
             .collection("events")
-            .add(favoriteEvent)
-            .addOnSuccessListener {
-                Log.d("Firestore", "Favorite event successfully added!")
+            .whereEqualTo("title", title)
+            .whereEqualTo("date", date)
+            .whereEqualTo("location", location)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (documents.isEmpty) {
+                    db.collection("favorites").document(user.uid)
+                        .collection("events")
+                        .add(favoriteEvent)
+                        .addOnSuccessListener {
+                            Toast.makeText(context, "Favorite added!", Toast.LENGTH_SHORT).show()
+                            Log.d("Firestore", "Favorite event successfully added!")
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(context, "Failed to add favorite.", Toast.LENGTH_SHORT).show()
+                            Log.w("Firestore", "Error adding favorite event", e)
+                        }
+                } else {
+                    Toast.makeText(context, "This event is already in your favorites.", Toast.LENGTH_SHORT).show()
+                    Log.d("Firestore", "This event is already in your favorites.")
+                }
             }
             .addOnFailureListener { e ->
-                Log.w("Firestore", "Error adding favorite event", e)
+                Toast.makeText(context, "Failed to check favorites.", Toast.LENGTH_SHORT).show()
+                Log.w("Firestore", "Error checking favorites", e)
             }
     } else {
+        Toast.makeText(context, "No authenticated user found.", Toast.LENGTH_SHORT).show()
         Log.w("Firestore", "No authenticated user found.")
     }
 }

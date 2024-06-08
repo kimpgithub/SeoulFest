@@ -37,6 +37,8 @@ data class CulturalEvent(
     var lat: String? = null,
 
     @field:Element(name = "LOT", required = false)
-    var lng: String? = null
+    var lng: String? = null,
 
+    // Firestore 문서 ID를 저장하기 위한 필드 추가
+    var id: String = ""
 )

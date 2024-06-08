@@ -1,5 +1,7 @@
 package com.example.seoulfest.btmnavbtn
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -19,9 +22,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
@@ -34,23 +39,37 @@ import java.net.URLEncoder
 @Composable
 fun FavoritesScreen(navController: NavHostController) {
     val events = remember { mutableStateOf<List<CulturalEvent>>(emptyList()) }
+    val context = LocalContext.current
 
-    val db = FirebaseFirestore.getInstance()
-    val auth = FirebaseAuth.getInstance()
-    val user = auth.currentUser
-
-    if (user != null) {
-        db.collection("users").document(user.uid).collection("favorites")
-            .get()
-            .addOnSuccessListener { documents ->
-                val fetchedEvents = documents.mapNotNull { doc ->
-                    doc.toObject(CulturalEvent::class.java)
-                }
+    LaunchedEffect(Unit) {
+        fetchFavorites(
+            onSuccess = { fetchedEvents ->
                 events.value = fetchedEvents
+            },
+            onFailure = { exception ->
+                Toast.makeText(context, "Failed to load favorites: ${exception.message}", Toast.LENGTH_SHORT).show()
+                Log.w("Firestore", "Error getting documents: ", exception)
             }
-            .addOnFailureListener {
-                // Handle any errors
-            }
+        )
+    }
+
+    fun deleteFavorite(eventId: String) {
+        val db = FirebaseFirestore.getInstance()
+        val user = FirebaseAuth.getInstance().currentUser
+
+        user?.let {
+            db.collection("favorites").document(it.uid)
+                .collection("events").document(eventId)
+                .delete()
+                .addOnSuccessListener {
+                    Toast.makeText(context, "Favorite deleted!", Toast.LENGTH_SHORT).show()
+                    events.value = events.value.filterNot { it.id == eventId }
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(context, "Failed to delete favorite.", Toast.LENGTH_SHORT).show()
+                    Log.w("Firestore", "Error deleting favorite event", e)
+                }
+        }
     }
 
     Scaffold(
@@ -73,7 +92,9 @@ fun FavoritesScreen(navController: NavHostController) {
                     location = event.place ?: "",
                     pay = event.useFee ?: "",
                     imageUrl = event.mainImg ?: "",
-                    navController = navController
+                    eventId = event.id,
+                    navController = navController,
+                    onDelete = { deleteFavorite(event.id) }
                 )
             }
         }
@@ -85,12 +106,14 @@ fun fetchFavorites(onSuccess: (List<CulturalEvent>) -> Unit, onFailure: (Excepti
     val currentUser = FirebaseAuth.getInstance().currentUser
 
     currentUser?.let { user ->
-        db.collection("users").document(user.uid)
-            .collection("favorites")
+        db.collection("favorites").document(user.uid)
+            .collection("events")
             .get()
             .addOnSuccessListener { documents ->
                 val events = documents.mapNotNull { document ->
-                    document.toObject(CulturalEvent::class.java)
+                    document.toObject(CulturalEvent::class.java).apply {
+                        id = document.id
+                    }
                 }
                 onSuccess(events)
             }
@@ -107,7 +130,9 @@ fun EventItem(
     location: String,
     pay: String,
     imageUrl: String,
-    navController: NavHostController
+    eventId: String,
+    navController: NavHostController,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -136,6 +161,9 @@ fun EventItem(
                 Text(text = date, style = MaterialTheme.typography.bodySmall)
                 Text(text = location, style = MaterialTheme.typography.bodySmall)
                 Text(text = pay, style = MaterialTheme.typography.bodySmall)
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                }
             }
         }
     }
