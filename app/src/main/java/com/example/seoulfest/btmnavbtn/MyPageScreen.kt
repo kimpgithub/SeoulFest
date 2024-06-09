@@ -3,7 +3,6 @@ package com.example.seoulfest.btmnavbtn
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,9 +35,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.seoulfest.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 
@@ -60,39 +62,50 @@ fun MyPageScreen(navController: NavHostController, auth: FirebaseAuth) {
             )
         },
         content = { innerPadding ->
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(16.dp)
             ) {
-                ProfileSection(user)
-                Spacer(modifier = Modifier.height(16.dp))
-                NotificationSettingsSection()
-                Spacer(modifier = Modifier.height(16.dp))
-                AppSettingsSection(navController)
-                Spacer(modifier = Modifier.height(16.dp))
-                LogoutSection(navController, context, auth) // NavController 인자로 전달
+                item { ProfileSection(user) { navController.navigate("edit_profile") } }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+                item { NotificationSettingsSection() }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+                item { AppSettingsSection(navController) }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+                item { LogoutSection(navController, context, auth) }
             }
         }
     )
 }
 @Composable
-fun ProfileSection(user: FirebaseUser?) {
+fun ProfileSection(user: FirebaseUser?, onEditProfile: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxWidth()
     ) {
-        AsyncImage(
-            model = user?.photoUrl,
-            contentDescription = null,
-            modifier = Modifier
-                .size(100.dp)
-                .clip(CircleShape)
-                .background(Color.Gray)
-                .clickable { /* 프로필 사진 변경 기능 */ }
-        )
+        if (user?.photoUrl != null) {
+            AsyncImage(
+                model = user.photoUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(Color.Gray)
+            )
+        } else {
+            // Use painterResource to load the default image
+            androidx.compose.foundation.Image(
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(Color.Gray)
+            )
+        }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = user?.displayName ?: "User Name",
@@ -104,7 +117,7 @@ fun ProfileSection(user: FirebaseUser?) {
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { /* 프로필 수정 기능 */ }) {
+        Button(onClick = onEditProfile) {
             Text("Edit Profile")
         }
     }

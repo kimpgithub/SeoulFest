@@ -18,6 +18,7 @@ import androidx.navigation.navArgument
 import com.example.seoulfest.btmnavbtn.FavoritesScreen
 import com.example.seoulfest.btmnavbtn.MapScreen
 import com.example.seoulfest.btmnavbtn.MyPageScreen
+import com.example.seoulfest.btmnavbtn.mypage.EditProfileScreen
 import com.example.seoulfest.detailscreen.DetailScreen
 import com.example.seoulfest.login.LoginScreen
 import com.example.seoulfest.main.BottomNavigationBar
@@ -97,6 +98,8 @@ class MainActivity : ComponentActivity() {
                         }
                         composable("map") { MapScreen(navController) }
                         composable("mypage") { MyPageScreen(navController, auth) }
+                        composable("edit_profile") { EditProfileScreen(navController, auth) }
+
                         composable("favorites") { FavoritesScreen(navController) }
                     }
                 }
