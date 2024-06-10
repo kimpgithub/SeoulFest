@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.seoulfest.calculateUpcomingEventCount
 import com.example.seoulfest.models.CulturalEvent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -41,14 +42,15 @@ import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FavoritesScreen(navController: NavHostController) {
+fun FavoritesScreen(navController: NavHostController, onFetchUpcomingEventCount: (Int) -> Unit) {
     val events = remember { mutableStateOf<List<CulturalEvent>>(emptyList()) }
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         fetchFavorites(
-            onSuccess = { fetchedEvents ->
+            onSuccess = { fetchedEvents, upcomingEventCount ->
                 events.value = fetchedEvents
+                onFetchUpcomingEventCount(upcomingEventCount)
             },
             onFailure = { exception ->
                 Toast.makeText(context, "Failed to load favorites: ${exception.message}", Toast.LENGTH_SHORT).show()
@@ -68,6 +70,9 @@ fun FavoritesScreen(navController: NavHostController) {
                 .addOnSuccessListener {
                     Toast.makeText(context, "Favorite deleted!", Toast.LENGTH_SHORT).show()
                     events.value = events.value.filterNot { it.id == eventId }
+                    fetchUpcomingEventCount(events.value) { count ->
+                        onFetchUpcomingEventCount(count)
+                    }
                 }
                 .addOnFailureListener { e ->
                     Toast.makeText(context, "Failed to delete favorite.", Toast.LENGTH_SHORT).show()
@@ -111,7 +116,7 @@ fun FavoritesScreen(navController: NavHostController) {
     }
 }
 
-fun fetchFavorites(onSuccess: (List<CulturalEvent>) -> Unit, onFailure: (Exception) -> Unit) {
+fun fetchFavorites(onSuccess: (List<CulturalEvent>, Int) -> Unit, onFailure: (Exception) -> Unit) {
     val db = FirebaseFirestore.getInstance()
     val currentUser = FirebaseAuth.getInstance().currentUser
 
@@ -125,7 +130,8 @@ fun fetchFavorites(onSuccess: (List<CulturalEvent>) -> Unit, onFailure: (Excepti
                         id = document.id
                     }
                 }
-                onSuccess(events)
+                val upcomingEventCount = calculateUpcomingEventCount(events)
+                onSuccess(events, upcomingEventCount)
             }
             .addOnFailureListener { exception ->
                 onFailure(exception)
@@ -133,6 +139,10 @@ fun fetchFavorites(onSuccess: (List<CulturalEvent>) -> Unit, onFailure: (Excepti
     }
 }
 
+fun fetchUpcomingEventCount(events: List<CulturalEvent>, onResult: (Int) -> Unit) {
+    val count = calculateUpcomingEventCount(events)
+    onResult(count)
+}
 @Composable
 fun EventItem(
     event: CulturalEvent,
@@ -177,3 +187,4 @@ fun EventItem(
         }
     }
 }
+

@@ -1,12 +1,16 @@
 package com.example.seoulfest
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -23,10 +27,15 @@ import com.example.seoulfest.detailscreen.DetailScreen
 import com.example.seoulfest.login.LoginScreen
 import com.example.seoulfest.main.BottomNavigationBar
 import com.example.seoulfest.main.MainScreen
+import com.example.seoulfest.models.CulturalEvent
 import com.example.seoulfest.seoulfilter.SeoulFilter
 import com.example.seoulfest.ui.theme.SeoulFestTheme
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 
 class MainActivity : ComponentActivity() {
@@ -40,6 +49,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             SeoulFestTheme {
                 val navController = rememberNavController()
+                var upcomingEventCount by remember { mutableIntStateOf(0) }
+
+                // 로그인 후 바로 즐겨찾기 데이터를 가져와서 업데이트
+                if (auth.currentUser != null) {
+                    fetchFavorites { _, count ->
+                        upcomingEventCount = count
+                        Log.d("MainActivity", "Initial Upcoming Event Count: $count")
+                    }
+                }
+
                 Scaffold(
                     bottomBar = { BottomBarVisibility(navController) }
                 ) { innerPadding ->
@@ -60,7 +79,7 @@ class MainActivity : ComponentActivity() {
                             val selectedDistricts =
                                 backStackEntry.arguments?.getString("selectedDistricts")?.split(",")
                                     ?.filter { it.isNotEmpty() } ?: emptyList()
-                            MainScreen(navController, selectedDistricts)
+                            MainScreen(navController, selectedDistricts, upcomingEventCount)
                         }
                         composable(
                             "detail?title={title}&date={date}&location={location}&pay={pay}&imageUrl={imageUrl}",
@@ -99,14 +118,19 @@ class MainActivity : ComponentActivity() {
                         composable("map") { MapScreen(navController) }
                         composable("mypage") { MyPageScreen(navController, auth) }
                         composable("edit_profile") { EditProfileScreen(navController, auth) }
-
-                        composable("favorites") { FavoritesScreen(navController) }
+                        composable("favorites") {
+                            FavoritesScreen(navController) { count ->
+                                Log.d("MainActivity", "Upcoming Event Count: $count") // 로그 추가
+                                upcomingEventCount = count
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
+
 @Composable
 fun BottomBarVisibility(navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -116,3 +140,51 @@ fun BottomBarVisibility(navController: NavController) {
         BottomNavigationBar(navController = navController)
     }
 }
+
+private fun fetchFavorites(onResult: (List<CulturalEvent>, Int) -> Unit) {
+    val db = FirebaseFirestore.getInstance()
+    val currentUser = FirebaseAuth.getInstance().currentUser
+
+    currentUser?.let { user ->
+        db.collection("favorites").document(user.uid)
+            .collection("events")
+            .get()
+            .addOnSuccessListener { documents ->
+                val events = documents.mapNotNull { document ->
+                    document.toObject(CulturalEvent::class.java).apply {
+                        id = document.id
+                    }
+                }
+                val upcomingEventCount = calculateUpcomingEventCount(events)
+                onResult(events, upcomingEventCount)
+            }
+            .addOnFailureListener { exception ->
+                Log.w("MainActivity", "Error getting documents: ", exception)
+                onResult(emptyList(), 0)
+            }
+    } ?: onResult(emptyList(), 0)
+}
+
+fun calculateUpcomingEventCount(events: List<CulturalEvent>): Int {
+    val today = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.time
+
+    val next30Days = Calendar.getInstance().apply {
+        add(Calendar.DAY_OF_YEAR, 30)
+    }.time
+
+    return events.count { event ->
+        val eventDateRange = event.date?.split("~")
+        if (eventDateRange != null && eventDateRange.size == 2) {
+            val startDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(eventDateRange[0])
+            startDate?.after(today) == true || startDate == today
+        } else {
+            false
+        }
+    }
+}
+

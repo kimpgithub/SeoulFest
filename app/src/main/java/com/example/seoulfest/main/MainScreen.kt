@@ -1,10 +1,10 @@
 package com.example.seoulfest.main
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,9 +18,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -45,37 +48,30 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun MainScreen(navController: NavHostController, selectedDistricts: List<String>) {
+fun MainScreen(
+    navController: NavHostController,
+    selectedDistricts: List<String>,
+    upcomingEventCount: Int
+) {
     val viewModel: MainViewModel = viewModel()
     val events by viewModel.events.collectAsState()
-
     LaunchedEffect(selectedDistricts) {
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        Log.d("MainScreen", "Today: $today")  // 오늘 날짜 로그
         viewModel.fetchEvents(
             apiKey = "74714163566b696d3431534b446673",
             today = today,
             selectedDistricts = selectedDistricts
         )
     }
-    // API 응답 데이터 확인 로그
-    events.forEach { event ->
-        Log.d("MainScreen", "Event: ${event.title}, Date: ${event.date}")
-    }
-
-    Scaffold { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp)
-        ) {
+    Scaffold(
+        topBar = {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .background(Color.Black)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(onClick = {
                     val selectedDistrictsStr = selectedDistricts.joinToString(",")
@@ -83,8 +79,35 @@ fun MainScreen(navController: NavHostController, selectedDistricts: List<String>
                 }) {
                     Text("서울 지역 선택")
                 }
+                Box {
+                    IconButton(onClick = { navController.navigate("favorites") }) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Favorites",
+                            tint = Color.White
+                        )
+                    }
+                    if (upcomingEventCount > 0) {
+                        Badge(
+                            modifier = Modifier.align(Alignment.TopEnd)
+                        ) {
+                            Text(
+                                text = upcomingEventCount.toString(),
+                                color = Color.White,
+                                modifier = Modifier.padding(2.dp)
+                            )
+                        }
+                    }
+                }
             }
-
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start,
