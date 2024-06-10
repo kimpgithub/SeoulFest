@@ -1,5 +1,6 @@
 package com.example.seoulfest.main
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -50,10 +51,19 @@ fun MainScreen(navController: NavHostController, selectedDistricts: List<String>
 
     LaunchedEffect(selectedDistricts) {
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        viewModel.fetchEvents(apiKey = "74714163566b696d3431534b446673", today = today, selectedDistricts = selectedDistricts)
+        Log.d("MainScreen", "Today: $today")  // 오늘 날짜 로그
+        viewModel.fetchEvents(
+            apiKey = "74714163566b696d3431534b446673",
+            today = today,
+            selectedDistricts = selectedDistricts
+        )
+    }
+    // API 응답 데이터 확인 로그
+    events.forEach { event ->
+        Log.d("MainScreen", "Event: ${event.title}, Date: ${event.date}")
     }
 
-    Scaffold{ innerPadding ->
+    Scaffold { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -65,7 +75,6 @@ fun MainScreen(navController: NavHostController, selectedDistricts: List<String>
                 horizontalArrangement = Arrangement.Start,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp)
                     .padding(bottom = 16.dp)
             ) {
                 Button(onClick = {
@@ -114,7 +123,6 @@ fun MainScreen(navController: NavHostController, selectedDistricts: List<String>
                     }
                 }
             }
-
             LazyColumn {
                 items(events) { event ->
                     EventItem(
@@ -131,6 +139,7 @@ fun MainScreen(navController: NavHostController, selectedDistricts: List<String>
         }
     }
 }
+
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {

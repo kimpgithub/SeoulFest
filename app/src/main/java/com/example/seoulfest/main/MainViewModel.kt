@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
+
 class MainViewModel : ViewModel() {
     private val _events = MutableStateFlow<List<CulturalEvent>>(emptyList())
     val events: StateFlow<List<CulturalEvent>> get() = _events
@@ -24,23 +25,38 @@ class MainViewModel : ViewModel() {
                     type = "xml",
                     service = "culturalEventInfo",
                     startIndex = 1,
-                    endIndex = 100,
+                    endIndex = 500, // 더 많은 이벤트를 가져오기 위해 endIndex를 늘림
                     date = today
                 )
-                val filteredEvents = response.events?.filter { event ->
-                    selectedDistricts.isEmpty() || selectedDistricts.any { district ->
-                        event.guname?.contains(district) == true
-                    }
-                }
-                val sortedEvents = filteredEvents?.sortedBy {
-                    it.date?.split("~")?.get(0)
-                        ?.let { date ->
-                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(date)
+                val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(today)
+
+                // 이벤트 필터링 및 정렬
+                val filteredSortedEvents = response.events
+                    ?.filter { event ->
+                        val eventDateRange = event.date?.split("~")
+                        if (eventDateRange != null && eventDateRange.size == 2) {
+                            val startDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(eventDateRange[0])
+                            val isAfterToday = startDate?.after(todayDate) ?: false || startDate == todayDate
+                            val isInSelectedDistricts = selectedDistricts.isEmpty() || selectedDistricts.any { district ->
+                                event.guname?.contains(district) == true
+                            }
+                            isAfterToday && isInSelectedDistricts
+                        } else {
+                            false
                         }
-                }
-                _events.value = sortedEvents?.take(10) ?: emptyList()
+                    }
+                    ?.sortedBy {
+                        it.date?.split("~")?.get(0)
+                            ?.let { date ->
+                                SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(date)
+                            }
+                    }
+
+                // 필터링된 이벤트를 StateFlow에 설정
+                _events.value = filteredSortedEvents?.take(10) ?: emptyList()
             } catch (e: Exception) {
-                Log.e("MainViewModel", "Failed to fetch events", e)
+                // 에러 로그 출력
+                e.printStackTrace()
             }
         }
     }
