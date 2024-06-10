@@ -165,7 +165,7 @@ fun MainScreen(
 
 
 @Composable
-fun BottomNavigationBar(navController: NavController) {
+fun BottomNavigationBar(navController: NavController, updateUpcomingEventCount: () -> Unit) {
     NavigationBar {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
@@ -174,7 +174,12 @@ fun BottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
             label = { Text("Home") },
             selected = currentDestination?.route == "main",
-            onClick = { navController.navigate("main") }
+            onClick = {
+                navController.navigate("main") {
+                    launchSingleTop = true
+                }
+                updateUpcomingEventCount()  // Update count when Home is clicked
+            }
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.Map, contentDescription = "Map") },

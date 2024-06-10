@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +23,7 @@ import androidx.navigation.navArgument
 import com.example.seoulfest.btmnavbtn.FavoritesScreen
 import com.example.seoulfest.btmnavbtn.MapScreen
 import com.example.seoulfest.btmnavbtn.MyPageScreen
+import com.example.seoulfest.btmnavbtn.fetchFavorites
 import com.example.seoulfest.btmnavbtn.mypage.EditProfileScreen
 import com.example.seoulfest.detailscreen.DetailScreen
 import com.example.seoulfest.login.LoginScreen
@@ -51,16 +53,21 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 var upcomingEventCount by remember { mutableIntStateOf(0) }
 
-                // 로그인 후 바로 즐겨찾기 데이터를 가져와서 업데이트
-                if (auth.currentUser != null) {
-                    fetchFavorites { _, count ->
+                val updateUpcomingEventCount: () -> Unit = {
+                    fetchFavorites({ events, count ->
                         upcomingEventCount = count
-                        Log.d("MainActivity", "Initial Upcoming Event Count: $count")
-                    }
+                        Log.d("MainActivity", "Updated Upcoming Event Count: $count") // Added log for verification
+                    }, { exception ->
+                        Log.w("MainActivity", "Failed to fetch favorites: ${exception.message}")
+                    })
+                }
+
+                LaunchedEffect(Unit) {
+                    updateUpcomingEventCount()  // Initial fetch
                 }
 
                 Scaffold(
-                    bottomBar = { BottomBarVisibility(navController) }
+                    bottomBar = { BottomBarVisibility(navController, updateUpcomingEventCount) }
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
@@ -120,7 +127,6 @@ class MainActivity : ComponentActivity() {
                         composable("edit_profile") { EditProfileScreen(navController, auth) }
                         composable("favorites") {
                             FavoritesScreen(navController) { count ->
-                                Log.d("MainActivity", "Upcoming Event Count: $count") // 로그 추가
                                 upcomingEventCount = count
                             }
                         }
@@ -132,14 +138,15 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun BottomBarVisibility(navController: NavController) {
+fun BottomBarVisibility(navController: NavController, updateUpcomingEventCount: () -> Unit) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     if (currentRoute != "login") {
-        BottomNavigationBar(navController = navController)
+        BottomNavigationBar(navController = navController, updateUpcomingEventCount = updateUpcomingEventCount)
     }
 }
+
 
 private fun fetchFavorites(onResult: (List<CulturalEvent>, Int) -> Unit) {
     val db = FirebaseFirestore.getInstance()
@@ -187,4 +194,3 @@ fun calculateUpcomingEventCount(events: List<CulturalEvent>): Int {
         }
     }
 }
-
