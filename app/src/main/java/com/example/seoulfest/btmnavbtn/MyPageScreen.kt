@@ -1,6 +1,7 @@
 package com.example.seoulfest.btmnavbtn
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,11 +26,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,12 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.seoulfest.R
+import com.example.seoulfest.main.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyPageScreen(navController: NavHostController, auth: FirebaseAuth) {
+fun MyPageScreen(navController: NavHostController, auth: FirebaseAuth, viewModel: MainViewModel) {
     val user = auth.currentUser
     val context = LocalContext.current
 
@@ -70,7 +69,7 @@ fun MyPageScreen(navController: NavHostController, auth: FirebaseAuth) {
             ) {
                 item { ProfileSection(user) { navController.navigate("edit_profile") } }
                 item { Spacer(modifier = Modifier.height(16.dp)) }
-                item { NotificationSettingsSection() }
+                item { NotificationSettingsSection(viewModel) }
                 item { Spacer(modifier = Modifier.height(16.dp)) }
                 item { AppSettingsSection(navController) }
                 item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -124,15 +123,9 @@ fun ProfileSection(user: FirebaseUser?, onEditProfile: () -> Unit) {
 }
 
 @Composable
-fun NotificationSettingsSection() {
+fun NotificationSettingsSection(viewModel: MainViewModel) {
     val context = LocalContext.current
-    var notificationsEnabled by remember { mutableStateOf(false) }
-
-    // 초기화 및 상태 로드
-    LaunchedEffect(Unit) {
-        // 여기에 SharedPreferences 또는 데이터 저장소에서 알림 설정 상태를 로드하는 코드를 추가합니다.
-        notificationsEnabled = loadNotificationSetting(context)
-    }
+    val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
 
     Column {
         Text("Notification Settings", style = MaterialTheme.typography.titleMedium)
@@ -140,8 +133,8 @@ fun NotificationSettingsSection() {
         Switch(
             checked = notificationsEnabled,
             onCheckedChange = { isChecked ->
-                notificationsEnabled = isChecked
-                saveNotificationSetting(context, isChecked)
+                viewModel.saveNotificationSetting(context, isChecked)
+                Log.d("MyPageScreen", "notificationsEnabled changed to: $isChecked")
             },
             modifier = Modifier.padding(8.dp)
         )
@@ -149,12 +142,10 @@ fun NotificationSettingsSection() {
     }
 }
 
-
-
-// 알림 설정 상태를 로드하는 함수 (SharedPreferences 사용 예시)
+    // 알림 설정 상태를 로드하는 함수 (SharedPreferences 사용 예시)
 private fun loadNotificationSetting(context: Context): Boolean {
     val sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-    return sharedPreferences.getBoolean("notifications_enabled", false)
+    return sharedPreferences.getBoolean("notifications_enabled", true) // 기본값을 true로 설정
 }
 
 //TODO: DataStore

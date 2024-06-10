@@ -1,5 +1,6 @@
 package com.example.seoulfest.main
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -51,10 +52,12 @@ import java.util.Locale
 fun MainScreen(
     navController: NavHostController,
     selectedDistricts: List<String>,
-    upcomingEventCount: Int
+    upcomingEventCount: Int,
+    viewModel: MainViewModel
 ) {
-    val viewModel: MainViewModel = viewModel()
     val events by viewModel.events.collectAsState()
+    val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
+
     LaunchedEffect(selectedDistricts) {
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         viewModel.fetchEvents(
@@ -63,6 +66,11 @@ fun MainScreen(
             selectedDistricts = selectedDistricts
         )
     }
+    // 로그 추가
+    LaunchedEffect(notificationsEnabled) {
+        Log.d("MainScreen", "notificationsEnabled: $notificationsEnabled")
+    }
+
     Scaffold(
         topBar = {
             Row(
@@ -79,23 +87,25 @@ fun MainScreen(
                 }) {
                     Text("서울 지역 선택")
                 }
-                Box {
-                    IconButton(onClick = { navController.navigate("favorites") }) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Favorites",
-                            tint = Color.White
-                        )
-                    }
-                    if (upcomingEventCount > 0) {
-                        Badge(
-                            modifier = Modifier.align(Alignment.TopEnd)
-                        ) {
-                            Text(
-                                text = upcomingEventCount.toString(),
-                                color = Color.White,
-                                modifier = Modifier.padding(2.dp)
+                if (notificationsEnabled) { // 알림 설정이 활성화된 경우에만 아이콘 보이기
+                    Box {
+                        IconButton(onClick = { navController.navigate("favorites") }) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Favorites",
+                                tint = Color.White
                             )
+                        }
+                        if (upcomingEventCount > 0) {
+                            Badge(
+                                modifier = Modifier.align(Alignment.TopEnd)
+                            ) {
+                                Text(
+                                    text = upcomingEventCount.toString(),
+                                    color = Color.White,
+                                    modifier = Modifier.padding(2.dp)
+                                )
+                            }
                         }
                     }
                 }

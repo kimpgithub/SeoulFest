@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -29,6 +30,7 @@ import com.example.seoulfest.detailscreen.DetailScreen
 import com.example.seoulfest.login.LoginScreen
 import com.example.seoulfest.main.BottomNavigationBar
 import com.example.seoulfest.main.MainScreen
+import com.example.seoulfest.main.MainViewModel
 import com.example.seoulfest.models.CulturalEvent
 import com.example.seoulfest.seoulfilter.SeoulFilter
 import com.example.seoulfest.ui.theme.SeoulFestTheme
@@ -52,6 +54,7 @@ class MainActivity : ComponentActivity() {
             SeoulFestTheme {
                 val navController = rememberNavController()
                 var upcomingEventCount by remember { mutableIntStateOf(0) }
+                val viewModel: MainViewModel = viewModel()
 
                 val updateUpcomingEventCount: () -> Unit = {
                     fetchFavorites({ events, count ->
@@ -63,7 +66,9 @@ class MainActivity : ComponentActivity() {
                 }
 
                 LaunchedEffect(Unit) {
-                    updateUpcomingEventCount()  // Initial fetch
+                    updateUpcomingEventCount()
+                    Log.d("MainActivity", "Calling loadNotificationSetting")
+                    viewModel.loadNotificationSetting(this@MainActivity)
                 }
 
                 Scaffold(
@@ -86,7 +91,7 @@ class MainActivity : ComponentActivity() {
                             val selectedDistricts =
                                 backStackEntry.arguments?.getString("selectedDistricts")?.split(",")
                                     ?.filter { it.isNotEmpty() } ?: emptyList()
-                            MainScreen(navController, selectedDistricts, upcomingEventCount)
+                            MainScreen(navController, selectedDistricts, upcomingEventCount, viewModel)
                         }
                         composable(
                             "detail?title={title}&date={date}&location={location}&pay={pay}&imageUrl={imageUrl}",
@@ -123,7 +128,7 @@ class MainActivity : ComponentActivity() {
                             SeoulFilter(navController, selectedDistricts)
                         }
                         composable("map") { MapScreen(navController) }
-                        composable("mypage") { MyPageScreen(navController, auth) }
+                        composable("mypage") { MyPageScreen(navController, auth, viewModel) }
                         composable("edit_profile") { EditProfileScreen(navController, auth) }
                         composable("favorites") {
                             FavoritesScreen(navController) { count ->

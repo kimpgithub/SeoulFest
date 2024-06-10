@@ -1,5 +1,6 @@
 package com.example.seoulfest.main
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,6 +16,8 @@ import java.util.*
 class MainViewModel : ViewModel() {
     private val _events = MutableStateFlow<List<CulturalEvent>>(emptyList())
     val events: StateFlow<List<CulturalEvent>> get() = _events
+    private val _notificationsEnabled = MutableStateFlow(true) // 기본값 true
+    val notificationsEnabled: StateFlow<Boolean> get() = _notificationsEnabled
 
     fun fetchEvents(apiKey: String, today: String, selectedDistricts: List<String>) {
         viewModelScope.launch {
@@ -58,6 +61,25 @@ class MainViewModel : ViewModel() {
                 // 에러 로그 출력
                 e.printStackTrace()
             }
+        }
+    }
+
+    fun loadNotificationSetting(context: Context) {
+        viewModelScope.launch {
+            Log.d("MainViewModel", "Attempting to load notification settings")
+            val sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+            val enabled = sharedPreferences.getBoolean("notifications_enabled", true)
+            Log.d("MainViewModel", "Loaded notificationsEnabled: $enabled")
+            _notificationsEnabled.value = enabled
+        }
+    }
+
+    fun saveNotificationSetting(context: Context, isEnabled: Boolean) {
+        viewModelScope.launch {
+            val sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+            sharedPreferences.edit().putBoolean("notifications_enabled", isEnabled).apply()
+            Log.d("MainViewModel", "Saved notificationsEnabled: $isEnabled")
+            _notificationsEnabled.value = isEnabled
         }
     }
 }
