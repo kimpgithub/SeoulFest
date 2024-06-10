@@ -1,4 +1,4 @@
-package com.example.seoulfest.main
+package com.example.seoulfest.main_screen
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -38,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState

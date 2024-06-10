@@ -1,4 +1,4 @@
-package com.example.seoulfest.btmnavbtn.mypage
+package com.example.seoulfest.btm_nav_btn.mypage_screen
 
 import android.net.Uri
 import android.widget.Toast

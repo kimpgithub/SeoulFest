@@ -1,4 +1,4 @@
-package com.example.seoulfest.btmnavbtn
+package com.example.seoulfest.btm_nav_btn.map_screen
 
 import android.Manifest
 import android.annotation.SuppressLint

@@ -1,4 +1,4 @@
-package com.example.seoulfest.btmnavbtn
+package com.example.seoulfest.btm_nav_btn.mypage_screen
 
 import android.content.Context
 import android.util.Log
@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.seoulfest.R
-import com.example.seoulfest.main.MainViewModel
+import com.example.seoulfest.main_screen.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 
@@ -71,13 +71,12 @@ fun MyPageScreen(navController: NavHostController, auth: FirebaseAuth, viewModel
                 item { Spacer(modifier = Modifier.height(16.dp)) }
                 item { NotificationSettingsSection(viewModel) }
                 item { Spacer(modifier = Modifier.height(16.dp)) }
-                item { AppSettingsSection(navController) }
-                item { Spacer(modifier = Modifier.height(16.dp)) }
                 item { LogoutSection(navController, context, auth) }
             }
         }
     )
 }
+
 @Composable
 fun ProfileSection(user: FirebaseUser?, onEditProfile: () -> Unit) {
     Column(
@@ -139,39 +138,6 @@ fun NotificationSettingsSection(viewModel: MainViewModel) {
             modifier = Modifier.padding(8.dp)
         )
         Text("Receive event notifications", style = MaterialTheme.typography.bodyMedium)
-    }
-}
-
-    // 알림 설정 상태를 로드하는 함수 (SharedPreferences 사용 예시)
-private fun loadNotificationSetting(context: Context): Boolean {
-    val sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-    return sharedPreferences.getBoolean("notifications_enabled", true) // 기본값을 true로 설정
-}
-
-//TODO: DataStore
-
-// 알림 설정 상태를 저장하는 함수 (SharedPreferences 사용 예시)
-private fun saveNotificationSetting(context: Context, isEnabled: Boolean) {
-    val sharedPreferences = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-    sharedPreferences.edit().putBoolean("notifications_enabled", isEnabled).apply()
-}
-
-@Composable
-fun AppSettingsSection(navController: NavHostController) {
-    Column {
-        Text("App Settings", style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { /* 테마 설정 화면으로 이동 */ }) {
-            Text("Theme Settings")
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { /* 언어 설정 화면으로 이동 */ }) {
-            Text("Language Settings")
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { /* 알림 음량 설정 화면으로 이동 */ }) {
-            Text("Notification Volume Settings")
-        }
     }
 }
 

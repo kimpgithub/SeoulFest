@@ -1,4 +1,4 @@
-package com.example.seoulfest.seoulfilter
+package com.example.seoulfest.seoulfilter_screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

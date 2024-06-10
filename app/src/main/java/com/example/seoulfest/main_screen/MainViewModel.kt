@@ -1,4 +1,4 @@
-package com.example.seoulfest.main
+package com.example.seoulfest.main_screen
 
 import android.content.Context
 import android.util.Log

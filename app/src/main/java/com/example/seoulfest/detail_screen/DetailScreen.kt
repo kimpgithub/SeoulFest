@@ -1,4 +1,4 @@
-package com.example.seoulfest.detailscreen
+package com.example.seoulfest.detail_screen
 
 import android.content.Context
 import android.util.Log
@@ -32,8 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.google.firebase.auth.FirebaseAuth
-import java.net.URLDecoder
 import com.google.firebase.firestore.FirebaseFirestore
+import java.net.URLDecoder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

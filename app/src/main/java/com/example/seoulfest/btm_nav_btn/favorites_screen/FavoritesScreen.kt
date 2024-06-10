@@ -1,4 +1,4 @@
-package com.example.seoulfest.btmnavbtn
+package com.example.seoulfest.btm_nav_btn.favorites_screen
 
 import android.util.Log
 import android.widget.Toast
