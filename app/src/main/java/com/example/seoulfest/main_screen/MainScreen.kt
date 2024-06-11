@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,11 +39,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
+import com.example.seoulfest.R
 import com.example.seoulfest.models.CulturalEvent
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
@@ -74,7 +77,14 @@ fun MainScreen(
     }
 
     Scaffold(
-        topBar = { TopBar(navController, selectedDistricts, notificationsEnabled, upcomingEventCount) }
+        topBar = {
+            TopBar(
+                navController,
+                selectedDistricts,
+                notificationsEnabled,
+                upcomingEventCount
+            )
+        }
     ) { innerPadding ->
         ContentColumn(innerPadding, selectedDistricts, navController, events)
     }
@@ -90,7 +100,7 @@ fun TopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.Black)
+            .background(colorResource(id = R.color.colorPrimary))
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -99,13 +109,14 @@ fun TopBar(
             val selectedDistrictsStr = selectedDistricts.joinToString(",")
             navController.navigate("seoul?selectedDistricts=$selectedDistrictsStr")
         }) {
-            Text("서울 지역 선택")
+            Text("서울 지역 선택", color = colorResource(id = R.color.colorTextPrimary))
         }
         if (notificationsEnabled) {
             NotificationIcon(navController, upcomingEventCount)
         }
     }
 }
+
 @Composable
 fun NotificationIcon(navController: NavHostController, upcomingEventCount: Int) {
     Box {
@@ -113,16 +124,17 @@ fun NotificationIcon(navController: NavHostController, upcomingEventCount: Int) 
             Icon(
                 imageVector = Icons.Default.Notifications,
                 contentDescription = "Favorites",
-                tint = Color.White
+                tint = colorResource(id = R.color.colorTextPrimary)
             )
         }
         if (upcomingEventCount > 0) {
             Badge(
-                modifier = Modifier.align(Alignment.TopEnd)
+                modifier = Modifier.align(Alignment.TopEnd),
+                containerColor = colorResource(id = R.color.colorAccent)
             ) {
                 Text(
                     text = upcomingEventCount.toString(),
-                    color = Color.White,
+                    color = colorResource(id = R.color.colorTextPrimary),
                     modifier = Modifier.padding(2.dp)
                 )
             }
@@ -163,26 +175,32 @@ fun SelectedDistrictsRow(selectedDistricts: List<String>, navController: NavHost
         }
     }
 }
+
 @Composable
-fun DistrictItem(district: String, selectedDistricts: List<String>, navController: NavHostController) {
+fun DistrictItem(
+    district: String,
+    selectedDistricts: List<String>,
+    navController: NavHostController
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start,
         modifier = Modifier
-            .background(Color.Gray)
+            .background(colorResource(id = R.color.colorAccent))
             .padding(8.dp)
             .padding(end = 8.dp)
     ) {
         Text(
             text = district,
-            color = Color.White,
+            color = colorResource(id = R.color.colorTextPrimary),
             modifier = Modifier.padding(end = 8.dp)
         )
         Text(
             "X",
-            color = Color.White,
+            color = colorResource(id = R.color.colorTextPrimary),
             modifier = Modifier.clickable {
-                val newSelectedDistricts = selectedDistricts.toMutableList().apply { remove(district) }
+                val newSelectedDistricts =
+                    selectedDistricts.toMutableList().apply { remove(district) }
                 val newSelectedDistrictsStr = newSelectedDistricts.joinToString(",")
                 navController.navigate("main?selectedDistricts=$newSelectedDistrictsStr") {
                     popUpTo("main") { inclusive = true }
@@ -191,6 +209,7 @@ fun DistrictItem(district: String, selectedDistricts: List<String>, navControlle
         )
     }
 }
+
 @Composable
 fun EventList(events: List<CulturalEvent>, navController: NavHostController) {
     LazyColumn {
@@ -210,8 +229,14 @@ fun EventList(events: List<CulturalEvent>, navController: NavHostController) {
 
 
 @Composable
-fun BottomNavigationBar(navController: NavController, updateUpcomingEventCount: KFunction1<(Int) -> Unit, Unit>) {
-    NavigationBar {
+fun BottomNavigationBar(
+    navController: NavController,
+    updateUpcomingEventCount: KFunction1<(Int) -> Unit, Unit>
+) {
+    NavigationBar(
+        containerColor = colorResource(id = R.color.colorPrimary), // NavigationBar 배경 색상
+        contentColor = colorResource(id = R.color.colorTextPrimary) // NavigationBar 텍스트 색상
+    ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
 
@@ -226,25 +251,49 @@ fun BottomNavigationBar(navController: NavController, updateUpcomingEventCount: 
                 updateUpcomingEventCount {
                     // Count updated
                 }
-            }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = colorResource(id = R.color.colorAccent), // 선택된 아이템의 아이콘 색상
+                selectedTextColor = colorResource(id = R.color.colorAccent), // 선택된 아이템의 텍스트 색상
+                unselectedIconColor = colorResource(id = R.color.colorTextSecondary), // 선택되지 않은 아이템의 아이콘 색상
+                unselectedTextColor = colorResource(id = R.color.colorTextSecondary) // 선택되지 않은 아이템의 텍스트 색상
+            )
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.Map, contentDescription = "Map") },
             label = { Text("Map") },
             selected = currentDestination?.route == "map",
-            onClick = { navController.navigate("map") }
+            onClick = { navController.navigate("map") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = colorResource(id = R.color.colorAccent), // 선택된 아이템의 아이콘 색상
+                selectedTextColor = colorResource(id = R.color.colorTextPrimary), // 선택된 아이템의 텍스트 색상
+                unselectedIconColor = colorResource(id = R.color.colorTextSecondary), // 선택되지 않은 아이템의 아이콘 색상
+                unselectedTextColor = colorResource(id = R.color.colorTextSecondary) // 선택되지 않은 아이템의 텍스트 색상
+            )
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.Favorite, contentDescription = "Favorites") },
             label = { Text("Favorites") },
             selected = currentDestination?.route == "favorites",
-            onClick = { navController.navigate("favorites") }
+            onClick = { navController.navigate("favorites") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = colorResource(id = R.color.colorAccent), // 선택된 아이템의 아이콘 색상
+                selectedTextColor = colorResource(id = R.color.colorTextPrimary), // 선택된 아이템의 텍스트 색상
+                unselectedIconColor = colorResource(id = R.color.colorTextSecondary), // 선택되지 않은 아이템의 아이콘 색상
+                unselectedTextColor = colorResource(id = R.color.colorTextSecondary) // 선택되지 않은 아이템의 텍스트 색상
+            )
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.Person, contentDescription = "My Page") },
             label = { Text("My Page") },
             selected = currentDestination?.route == "mypage",
-            onClick = { navController.navigate("mypage") }
+            onClick = { navController.navigate("mypage") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = colorResource(id = R.color.colorAccent), // 선택된 아이템의 아이콘 색상
+                selectedTextColor = colorResource(id = R.color.colorTextPrimary), // 선택된 아이템의 텍스트 색상
+                unselectedIconColor = colorResource(id = R.color.colorTextSecondary), // 선택되지 않은 아이템의 아이콘 색상
+                unselectedTextColor = colorResource(id = R.color.colorTextSecondary) // 선택되지 않은 아이템의 텍스트 색상
+            )
         )
     }
 }

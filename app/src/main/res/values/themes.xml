@@ -1,5 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base application theme -->
+    <style name="Theme.SeoulFest" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Primary color -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <!-- Primary dark color -->
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <!-- Accent color -->
+        <item name="colorAccent">@color/colorAccent</item>
+        <!-- Background color -->
+        <item name="android:colorBackground">@color/colorBackground</item>
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">@color/colorTextPrimary</item>
+        <item name="android:textColorSecondary">@color/colorTextSecondary</item>
+        <!-- Custom toolbar style -->
+        <item name="toolbarStyle">@style/ToolbarStyle</item>
+        <!-- Custom button style -->
+        <item name="buttonStyle">@style/ButtonStyle</item>
+    </style>
 
-    <style name="Theme.SeoulFest" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Toolbar style -->
+    <style name="ToolbarStyle" parent="Widget.MaterialComponents.Toolbar.Primary">
+        <item name="background">@color/colorPrimary</item>
+        <item name="titleTextColor">@color/colorTextPrimary</item>
+    </style>
+
+    <!-- Button style -->
+    <style name="ButtonStyle" parent="Widget.MaterialComponents.Button">
+        <item name="android:backgroundTint">@color/colorAccent</item>
+        <item name="android:textColor">@color/colorBackground</item>
+    </style>
 </resources>

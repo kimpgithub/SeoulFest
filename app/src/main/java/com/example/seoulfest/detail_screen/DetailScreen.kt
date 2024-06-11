@@ -3,6 +3,7 @@ package com.example.seoulfest.detail_screen
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,16 +22,20 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.seoulfest.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.net.URLDecoder
@@ -94,35 +99,50 @@ fun DetailScreenContent(
             .verticalScroll(rememberScrollState())
     ) {
         TopAppBar(
-            title = { Text("상세화면") },
+            title = { Text("상세화면", color = colorResource(id = R.color.colorTextPrimary)) },
             navigationIcon = {
                 IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = colorResource(id = R.color.colorTextPrimary)
+                    )
                 }
             },
             actions = {
                 IconButton(onClick = { onFavoriteClick(isFavorite) }) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = if (isFavorite) "Unfavorite" else "Favorite"
+                        contentDescription = if (isFavorite) "Unfavorite" else "Favorite",
+                        tint = Color.Red
                     )
                 }
-            }
+            },
+            colors = TopAppBarDefaults.mediumTopAppBarColors(
+                containerColor = colorResource(id = R.color.colorPrimary)
+            )
         )
         AsyncImage(
             model = imageUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
         )
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleLarge)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White) // 이미지 아래 공간의 배경을 흰색으로 설정
+                .padding(16.dp)
+                .weight(1f, fill = true) // 화면의 남은 공간을 채움
+        ) {
+            Text(title, style = MaterialTheme.typography.titleLarge.copy(color = colorResource(id = R.color.colorTextPrimary)))
             Spacer(modifier = Modifier.height(8.dp))
-            Text(date, style = MaterialTheme.typography.bodyMedium)
+            Text(date, style = MaterialTheme.typography.bodyMedium.copy(color = colorResource(id = R.color.colorTextSecondary)))
             Spacer(modifier = Modifier.height(8.dp))
-            Text(location, style = MaterialTheme.typography.bodyMedium)
+            Text(location, style = MaterialTheme.typography.bodyMedium.copy(color = colorResource(id = R.color.colorTextSecondary)))
             Spacer(modifier = Modifier.height(8.dp))
-            Text(pay, style = MaterialTheme.typography.bodyMedium)
+            Text(pay, style = MaterialTheme.typography.bodyMedium.copy(color = colorResource(id = R.color.colorTextSecondary)))
         }
     }
 }

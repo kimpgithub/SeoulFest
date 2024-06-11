@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -31,9 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.seoulfest.R
 import com.example.seoulfest.models.CulturalEvent
 import com.example.seoulfest.utils.FirebaseUtils.calculateUpcomingEventCount
 import com.google.firebase.auth.FirebaseAuth
@@ -53,7 +56,11 @@ fun FavoritesScreen(navController: NavHostController, onFetchUpcomingEventCount:
                 onFetchUpcomingEventCount(upcomingEventCount)
             },
             onFailure = { exception ->
-                Toast.makeText(context, "Failed to load favorites: ${exception.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    "Failed to load favorites: ${exception.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
                 Log.w("Firestore", "Error getting documents: ", exception)
             }
         )
@@ -84,12 +91,18 @@ fun FavoritesScreen(navController: NavHostController, onFetchUpcomingEventCount:
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("즐겨찾기") },
+                title = { Text("즐겨찾기", color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
-                }
+                }, colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    containerColor = colorResource(id = R.color.colorPrimary)
+                )
             )
         }
     ) { paddingValues ->
@@ -143,6 +156,7 @@ fun fetchUpcomingEventCount(events: List<CulturalEvent>, onResult: (Int) -> Unit
     val count = calculateUpcomingEventCount(events)
     onResult(count)
 }
+
 @Composable
 fun EventItem(
     event: CulturalEvent,
@@ -175,7 +189,9 @@ fun EventItem(
                 contentDescription = null,
                 modifier = Modifier.size(64.dp)
             )
-            Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
+            Column(modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp)) {
                 Text(text = event.title ?: "No title", style = MaterialTheme.typography.titleMedium)
                 Text(text = event.date ?: "No date", style = MaterialTheme.typography.bodySmall)
                 Text(text = event.place ?: "No place", style = MaterialTheme.typography.bodySmall)

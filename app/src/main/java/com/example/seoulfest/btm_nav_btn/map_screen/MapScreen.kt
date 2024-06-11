@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
@@ -62,15 +63,18 @@ fun MapScreen(navController: NavHostController) {
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("가까운 행사") },
+                        title = { Text("가까운 행사", color = MaterialTheme.colorScheme.onPrimary) },
                         navigationIcon = {
                             IconButton(onClick = { navController.navigateUp() }) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back"
+                                    contentDescription = "Back",
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
-                        }
+                        }, colors = TopAppBarDefaults.mediumTopAppBarColors(
+                            containerColor = colorResource(id = R.color.colorPrimary)
+                        )
                     )
                 }
             ) {
@@ -97,7 +101,13 @@ fun PermissionRationale(permissionState: PermissionState) {
         modifier = Modifier.fillMaxSize()
     ) {
         Text("Location permission is required to show the map.")
-        Button(onClick = { permissionState.launchPermissionRequest() }) {
+        Button(
+            onClick = { permissionState.launchPermissionRequest() },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
             Text("Grant Permission")
         }
     }
@@ -281,6 +291,9 @@ fun EventCard(event: CulturalEvent, onEventClick: (CulturalEvent) -> Unit) {
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Row(
@@ -310,18 +323,19 @@ fun EventCard(event: CulturalEvent, onEventClick: (CulturalEvent) -> Unit) {
                 Text(
                     text = event.title ?: "No title",
                     style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = event.date ?: "No date",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
                 Text(
                     text = event.place ?: "No place",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
         }
