@@ -7,6 +7,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,10 +43,12 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
+import com.example.seoulfest.models.CulturalEvent
 import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.reflect.KFunction1
 
 @Composable
 fun MainScreen(
@@ -71,110 +74,143 @@ fun MainScreen(
     }
 
     Scaffold(
-        topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.Black)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        topBar = { TopBar(navController, selectedDistricts, notificationsEnabled, upcomingEventCount) }
+    ) { innerPadding ->
+        ContentColumn(innerPadding, selectedDistricts, navController, events)
+    }
+}
+
+@Composable
+fun TopBar(
+    navController: NavHostController,
+    selectedDistricts: List<String>,
+    notificationsEnabled: Boolean,
+    upcomingEventCount: Int
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.Black)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Button(onClick = {
+            val selectedDistrictsStr = selectedDistricts.joinToString(",")
+            navController.navigate("seoul?selectedDistricts=$selectedDistrictsStr")
+        }) {
+            Text("서울 지역 선택")
+        }
+        if (notificationsEnabled) {
+            NotificationIcon(navController, upcomingEventCount)
+        }
+    }
+}
+@Composable
+fun NotificationIcon(navController: NavHostController, upcomingEventCount: Int) {
+    Box {
+        IconButton(onClick = { navController.navigate("favorites") }) {
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "Favorites",
+                tint = Color.White
+            )
+        }
+        if (upcomingEventCount > 0) {
+            Badge(
+                modifier = Modifier.align(Alignment.TopEnd)
             ) {
-                Button(onClick = {
-                    val selectedDistrictsStr = selectedDistricts.joinToString(",")
-                    navController.navigate("seoul?selectedDistricts=$selectedDistrictsStr")
-                }) {
-                    Text("서울 지역 선택")
-                }
-                if (notificationsEnabled) { // 알림 설정이 활성화된 경우에만 아이콘 보이기
-                    Box {
-                        IconButton(onClick = { navController.navigate("favorites") }) {
-                            Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = "Favorites",
-                                tint = Color.White
-                            )
-                        }
-                        if (upcomingEventCount > 0) {
-                            Badge(
-                                modifier = Modifier.align(Alignment.TopEnd)
-                            ) {
-                                Text(
-                                    text = upcomingEventCount.toString(),
-                                    color = Color.White,
-                                    modifier = Modifier.padding(2.dp)
-                                )
-                            }
-                        }
-                    }
-                }
+                Text(
+                    text = upcomingEventCount.toString(),
+                    color = Color.White,
+                    modifier = Modifier.padding(2.dp)
+                )
             }
         }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(bottom = 8.dp)
-            ) {
-                selectedDistricts.forEach { district ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start,
-                        modifier = Modifier
-                            .background(Color.Gray)
-                            .padding(8.dp)
-                            .padding(end = 8.dp)
-                    ) {
-                        Text(
-                            text = district,
-                            color = Color.White,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-                        Text(
-                            "X",
-                            color = Color.White,
-                            modifier = Modifier.clickable {
-                                val newSelectedDistricts =
-                                    selectedDistricts.toMutableList().apply { remove(district) }
-                                val newSelectedDistrictsStr =
-                                    newSelectedDistricts.joinToString(",")
-                                navController.navigate("main?selectedDistricts=$newSelectedDistrictsStr") {
-                                    popUpTo("main") { inclusive = true }
-                                }
-                            }
-                        )
-                    }
+    }
+}
+
+@Composable
+fun ContentColumn(
+    innerPadding: PaddingValues,
+    selectedDistricts: List<String>,
+    navController: NavHostController,
+    events: List<CulturalEvent>
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .padding(16.dp)
+    ) {
+        SelectedDistrictsRow(selectedDistricts, navController)
+        EventList(events, navController)
+    }
+}
+
+@Composable
+fun SelectedDistrictsRow(selectedDistricts: List<String>, navController: NavHostController) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start,
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(bottom = 8.dp)
+    ) {
+        selectedDistricts.forEach { district ->
+            DistrictItem(district, selectedDistricts, navController)
+        }
+    }
+}
+@Composable
+fun DistrictItem(district: String, selectedDistricts: List<String>, navController: NavHostController) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start,
+        modifier = Modifier
+            .background(Color.Gray)
+            .padding(8.dp)
+            .padding(end = 8.dp)
+    ) {
+        Text(
+            text = district,
+            color = Color.White,
+            modifier = Modifier.padding(end = 8.dp)
+        )
+        Text(
+            "X",
+            color = Color.White,
+            modifier = Modifier.clickable {
+                val newSelectedDistricts = selectedDistricts.toMutableList().apply { remove(district) }
+                val newSelectedDistrictsStr = newSelectedDistricts.joinToString(",")
+                navController.navigate("main?selectedDistricts=$newSelectedDistrictsStr") {
+                    popUpTo("main") { inclusive = true }
                 }
             }
-            LazyColumn {
-                items(events) { event ->
-                    EventItem(
-                        title = event.title ?: "",
-                        date = event.date ?: "",
-                        time = "",
-                        location = event.place ?: "",
-                        pay = event.useFee ?: "",
-                        imageUrl = event.mainImg ?: "",
-                        navController = navController
-                    )
-                }
-            }
+        )
+    }
+}
+@Composable
+fun EventList(events: List<CulturalEvent>, navController: NavHostController) {
+    LazyColumn {
+        items(events) { event ->
+            EventItem(
+                title = event.title ?: "",
+                date = event.date ?: "",
+                time = "",
+                location = event.place ?: "",
+                pay = event.useFee ?: "",
+                imageUrl = event.mainImg ?: "",
+                navController = navController
+            )
         }
     }
 }
 
 
 @Composable
-fun BottomNavigationBar(navController: NavController, updateUpcomingEventCount: () -> Unit) {
+fun BottomNavigationBar(navController: NavController, updateUpcomingEventCount: KFunction1<(Int) -> Unit, Unit>) {
     NavigationBar {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
@@ -187,7 +223,9 @@ fun BottomNavigationBar(navController: NavController, updateUpcomingEventCount: 
                 navController.navigate("main") {
                     launchSingleTop = true
                 }
-                updateUpcomingEventCount()  // Update count when Home is clicked
+                updateUpcomingEventCount {
+                    // Count updated
+                }
             }
         )
         NavigationBarItem(
@@ -256,3 +294,7 @@ fun EventItem(
         }
     }
 }
+
+
+
+

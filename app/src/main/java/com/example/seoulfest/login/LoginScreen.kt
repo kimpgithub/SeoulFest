@@ -26,11 +26,24 @@ import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LoginScreen(navController: NavHostController, auth: FirebaseAuth) {
-    // Hardcoded credentials for development
+    // 하드코딩된 자격 증명
     val email by remember { mutableStateOf("ex@ex.com") }
     val password by remember { mutableStateOf("111111") }
     val context = LocalContext.current
 
+    LoginContent(
+        email = email,
+        password = password,
+        onLoginClick = {
+            signInWithEmailAndPassword(auth, email, password, context) {
+                navController.navigate("main")
+            }
+        }
+    )
+}
+
+@Composable
+fun LoginContent(email: String, password: String, onLoginClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -38,28 +51,36 @@ fun LoginScreen(navController: NavHostController, auth: FirebaseAuth) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TextField(
-            value = email,
-            onValueChange = { /* No action needed for hardcoded values */ },
-            label = { Text("Email") },
-            enabled = false // Disable the TextField to prevent editing
-        )
+        EmailTextField(email)
         Spacer(modifier = Modifier.height(8.dp))
-        TextField(
-            value = password,
-            onValueChange = { /* No action needed for hardcoded values */ },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            enabled = false // Disable the TextField to prevent editing
-        )
+        PasswordTextField(password)
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            signInWithEmailAndPassword(auth, email, password, context) {
-                navController.navigate("main")
-            }
-        }) {
-            Text("Login")
-        }
+        LoginButton(onLoginClick)
+    }
+}
+@Composable
+fun EmailTextField(email: String) {
+    TextField(
+        value = email,
+        onValueChange = { /* 하드코딩된 값이므로 필요 없음 */ },
+        label = { Text("Email") },
+        enabled = false // 편집 방지
+    )
+}
+@Composable
+fun PasswordTextField(password: String) {
+    TextField(
+        value = password,
+        onValueChange = { /* 하드코딩된 값이므로 필요 없음 */ },
+        label = { Text("Password") },
+        visualTransformation = PasswordVisualTransformation(),
+        enabled = false // 편집 방지
+    )
+}
+@Composable
+fun LoginButton(onLoginClick: () -> Unit) {
+    Button(onClick = onLoginClick) {
+        Text("Login")
     }
 }
 
@@ -73,15 +94,14 @@ private fun signInWithEmailAndPassword(
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
+                showToast(context, "Login successful")
                 onSuccess()
             } else {
-                Toast.makeText(
-                    context,
-                    "Login failed: ${task.exception?.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showToast(context, "Login failed: ${task.exception?.message}")
                 Log.e("LoginScreen", "Login failed", task.exception)
             }
         }
+}
+private fun showToast(context: Context, message: String) {
+    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 }

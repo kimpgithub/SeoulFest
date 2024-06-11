@@ -34,8 +34,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.seoulfest.calculateUpcomingEventCount
 import com.example.seoulfest.models.CulturalEvent
+import com.example.seoulfest.utils.FirebaseUtils.calculateUpcomingEventCount
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.net.URLEncoder
