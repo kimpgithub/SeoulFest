@@ -108,4 +108,7 @@ dependencies {
     implementation("com.google.maps.android:maps-compose:2.0.0")
     implementation("androidx.compose.material:material-icons-core:1.5.3")
     implementation("androidx.compose.material:material-icons-extended:1.5.3")
+    implementation ("com.airbnb.android:lottie:6.4.0")
+    implementation ("com.airbnb.android:lottie-compose:6.4.0")
+
 }

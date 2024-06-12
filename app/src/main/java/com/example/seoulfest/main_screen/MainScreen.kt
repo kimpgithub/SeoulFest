@@ -1,6 +1,7 @@
 package com.example.seoulfest.main_screen
 
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -9,10 +10,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -45,6 +48,12 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
+import coil.compose.rememberImagePainter
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.seoulfest.R
 import com.example.seoulfest.models.CulturalEvent
 import java.net.URLEncoder
@@ -97,24 +106,73 @@ fun TopBar(
     notificationsEnabled: Boolean,
     upcomingEventCount: Int
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colorResource(id = R.color.colorPrimary))
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Button(onClick = {
-            val selectedDistrictsStr = selectedDistricts.joinToString(",")
-            navController.navigate("seoul?selectedDistricts=$selectedDistrictsStr")
-        }) {
-            Text("서울 지역 선택", color = colorResource(id = R.color.colorTextPrimary))
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colorResource(id = R.color.colorPrimary))
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(onClick = {
+                val selectedDistrictsStr = selectedDistricts.joinToString(",")
+                navController.navigate("seoul?selectedDistricts=$selectedDistrictsStr")
+            }) {
+                Text("서울 지역 선택", color = colorResource(id = R.color.colorTextPrimary))
+            }
+            Spacer(modifier = Modifier.weight(1f)) // 애니메이션과 버튼 사이에 충분한 공간 확보
+
+            LaunchLottieAnimation()
+
+            if (notificationsEnabled) {
+                NotificationIcon(navController, upcomingEventCount)
+            }
         }
-        if (notificationsEnabled) {
-            NotificationIcon(navController, upcomingEventCount)
+
+        // 이미지 리스트를 표시하는 부분
+        LazyColumn {
+            items(selectedDistricts) { district ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = rememberImagePainter("image_url_here"),
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = district, color = colorResource(id = R.color.colorTextPrimary))
+                }
+            }
         }
     }
+}
+
+@Composable
+fun LaunchLottieAnimation() {
+    val composition by rememberLottieComposition(LottieCompositionSpec.Asset("animation_launch.json"))
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = LottieConstants.IterateForever // 무한 반복 설정
+    )
+
+    // 로그 추가
+    Log.d("Lottie", "Composition: $composition")
+    Log.d("Lottie", "Progress: $progress")
+
+    if (composition == null) {
+        Log.e("Lottie", "Failed to load composition")
+    }
+
+    LottieAnimation(
+        composition = composition,
+        progress = { progress },
+        modifier = Modifier.size(60.dp)
+    )
 }
 
 @Composable
@@ -330,7 +388,7 @@ fun EventItem(
             model = imageUrl,
             contentDescription = null,
             modifier = Modifier
-                .size(64.dp)
+                .size(120.dp)
                 .padding(end = 8.dp)
         )
 
