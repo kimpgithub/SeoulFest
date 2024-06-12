@@ -19,11 +19,11 @@ class MainViewModel : ViewModel() {
     private val _notificationsEnabled = MutableStateFlow(true) // 기본값 true
     val notificationsEnabled: StateFlow<Boolean> get() = _notificationsEnabled
 
-    fun fetchEvents(apiKey: String, today: String, selectedDistricts: List<String>) {
+    fun fetchEvents(apiKey: String, selectedStartDate: String, selectedEndDate: String, selectedDistricts: List<String>) {
         viewModelScope.launch {
             try {
-                val events = loadEvents(apiKey, today)
-                val filteredEvents = filterAndSortEvents(events, today, selectedDistricts)
+                val events = loadEvents(apiKey, selectedStartDate, selectedEndDate)
+                val filteredEvents = filterAndSortEvents(events, selectedStartDate, selectedEndDate, selectedDistricts)
                 _events.value = filteredEvents.take(10)
             } catch (e: Exception) {
                 Log.e("MainViewModel", "Error fetching events: ${e.message}")
@@ -31,7 +31,8 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private suspend fun loadEvents(apiKey: String, today: String): List<CulturalEvent> {
+
+    private suspend fun loadEvents(apiKey: String, selectedStartDate: String, selectedEndDate: String): List<CulturalEvent> {
         val apiService = SeoulCulturalEventService.create()
         val response = apiService.getEvents(
             apiKey = apiKey,
@@ -39,35 +40,65 @@ class MainViewModel : ViewModel() {
             service = "culturalEventInfo",
             startIndex = 1,
             endIndex = 500,
-            date = today
+            date = "$selectedStartDate~$selectedEndDate"
         )
         return response.events ?: emptyList()
     }
 
+
     private fun filterAndSortEvents(
         events: List<CulturalEvent>,
-        today: String,
+        selectedStartDate: String,
+        selectedEndDate: String,
         selectedDistricts: List<String>
     ): List<CulturalEvent> {
-        val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(today)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val startDateParsed = try {
+            dateFormat.parse(selectedStartDate)
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "Error parsing selectedStartDate: ${e.message}")
+            Date() // 기본값으로 현재 날짜를 사용
+        }
+        val endDateParsed = try {
+            dateFormat.parse(selectedEndDate)
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "Error parsing selectedEndDate: ${e.message}")
+            Date() // 기본값으로 현재 날짜를 사용
+        }
+
         return events.filter { event ->
             val eventDateRange = event.date?.split("~")
             if (eventDateRange != null && eventDateRange.size == 2) {
-                val startDate =
-                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(eventDateRange[0])
-                val isAfterToday = startDate?.after(todayDate) ?: false || startDate == todayDate
-                val isInSelectedDistricts =
-                    selectedDistricts.isEmpty() || selectedDistricts.any { district ->
-                        event.guname?.contains(district) == true
-                    }
-                isAfterToday && isInSelectedDistricts
+                val eventStartDate = try {
+                    dateFormat.parse(eventDateRange[0])
+                } catch (e: Exception) {
+                    Log.e("MainViewModel", "Error parsing event start date: ${e.message}")
+                    null
+                }
+                val eventEndDate = try {
+                    dateFormat.parse(eventDateRange[1])
+                } catch (e: Exception) {
+                    Log.e("MainViewModel", "Error parsing event end date: ${e.message}")
+                    null
+                }
+                val isInDateRange = (eventStartDate?.after(startDateParsed) ?: false || eventStartDate == startDateParsed) &&
+                        (eventEndDate?.before(endDateParsed) ?: false || eventEndDate == endDateParsed)
+                val isInSelectedDistricts = selectedDistricts.isEmpty() || selectedDistricts.any { district ->
+                    event.guname?.contains(district) == true
+                }
+                isInDateRange && isInSelectedDistricts
             } else {
                 false
             }
         }.sortedBy {
             it.date?.split("~")?.get(0)
                 ?.let { date ->
-                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(date)
+                    try {
+                        dateFormat.parse(date)
+                    } catch (e: Exception) {
+                        Log.e("MainViewModel", "Error parsing event sort date: ${e.message}")
+                        null
+                    }
                 }
         }
     }

@@ -34,6 +34,9 @@ import com.example.seoulfest.seoulfilter_screen.SeoulFilter
 import com.example.seoulfest.ui.theme.SeoulFestTheme
 import com.example.seoulfest.utils.FirebaseUtils
 import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.reflect.KFunction1
 
 class MainActivity : ComponentActivity() {
@@ -76,15 +79,29 @@ fun MainScreenContent(auth: FirebaseAuth) {
         ) {
             composable("login") { LoginScreen(navController, auth) }
             composable(
-                "main?selectedDistricts={selectedDistricts}",
-                arguments = listOf(navArgument("selectedDistricts") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                })
+                "main?selectedDistricts={selectedDistricts}&selectedStartDate={selectedStartDate}&selectedEndDate={selectedEndDate}",
+                arguments = listOf(
+                    navArgument("selectedDistricts") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("selectedStartDate") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                    },
+                    navArgument("selectedEndDate") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                    }
+                )
             ) { backStackEntry ->
                 val selectedDistricts = backStackEntry.arguments?.getString("selectedDistricts")?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
-                MainScreen(navController, selectedDistricts, upcomingEventCount, viewModel)
+                val selectedStartDate = backStackEntry.arguments?.getString("selectedStartDate") ?: SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                val selectedEndDate = backStackEntry.arguments?.getString("selectedEndDate") ?: SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                MainScreen(navController, selectedDistricts, selectedStartDate, selectedEndDate, upcomingEventCount, viewModel)
             }
             composable(
                 "detail?title={title}&date={date}&location={location}&pay={pay}&imageUrl={imageUrl}",
