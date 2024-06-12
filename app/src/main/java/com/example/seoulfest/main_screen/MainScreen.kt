@@ -58,11 +58,11 @@ fun MainScreen(
     selectedDistricts: List<String>,
     selectedStartDate: String,
     selectedEndDate: String,
-    upcomingEventCount: Int,
     viewModel: MainViewModel
 ) {
     val events by viewModel.events.collectAsState()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
+    val upcomingEventCount by viewModel.upcomingEventCount.collectAsState()
 
     LaunchedEffect(selectedDistricts, selectedStartDate, selectedEndDate) {
         Log.d(
@@ -75,6 +75,7 @@ fun MainScreen(
             selectedEndDate = selectedEndDate,
             selectedDistricts = selectedDistricts
         )
+        viewModel.fetchFavoritesAndUpdateCount()
     }
 
     Scaffold(

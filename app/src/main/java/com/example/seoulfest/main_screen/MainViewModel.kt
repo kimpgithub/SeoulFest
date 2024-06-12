@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.seoulfest.models.CulturalEvent
 import com.example.seoulfest.network.SeoulCulturalEventService
+import com.example.seoulfest.utils.FirebaseUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -16,6 +17,8 @@ import java.util.*
 class MainViewModel : ViewModel() {
     private val _events = MutableStateFlow<List<CulturalEvent>>(emptyList())
     val events: StateFlow<List<CulturalEvent>> get() = _events
+    private val _upcomingEventCount = MutableStateFlow(0)
+    val upcomingEventCount: StateFlow<Int> get() = _upcomingEventCount
     private val _notificationsEnabled = MutableStateFlow(true) // 기본값 true
     val notificationsEnabled: StateFlow<Boolean> get() = _notificationsEnabled
 
@@ -25,12 +28,21 @@ class MainViewModel : ViewModel() {
                 val events = loadEvents(apiKey, selectedStartDate, selectedEndDate)
                 val filteredEvents = filterAndSortEvents(events, selectedStartDate, selectedEndDate, selectedDistricts)
                 _events.value = filteredEvents.take(10)
+
             } catch (e: Exception) {
                 Log.e("MainViewModel", "Error fetching events: ${e.message}")
             }
         }
     }
 
+    fun fetchFavoritesAndUpdateCount() {
+        viewModelScope.launch {
+            FirebaseUtils.fetchFavorites { events, count ->
+                _events.value = events
+                _upcomingEventCount.value = count
+            }
+        }
+    }
 
     private suspend fun loadEvents(apiKey: String, selectedStartDate: String, selectedEndDate: String): List<CulturalEvent> {
         val apiService = SeoulCulturalEventService.create()

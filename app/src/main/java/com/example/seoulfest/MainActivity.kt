@@ -101,7 +101,7 @@ fun MainScreenContent(auth: FirebaseAuth) {
                 val selectedDistricts = backStackEntry.arguments?.getString("selectedDistricts")?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
                 val selectedStartDate = backStackEntry.arguments?.getString("selectedStartDate") ?: SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
                 val selectedEndDate = backStackEntry.arguments?.getString("selectedEndDate") ?: SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                MainScreen(navController, selectedDistricts, selectedStartDate, selectedEndDate, upcomingEventCount, viewModel)
+                MainScreen(navController, selectedDistricts, selectedStartDate, selectedEndDate, viewModel)
             }
             composable(
                 "detail?title={title}&date={date}&location={location}&pay={pay}&imageUrl={imageUrl}",

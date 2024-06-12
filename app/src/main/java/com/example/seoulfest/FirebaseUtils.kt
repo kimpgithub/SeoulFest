@@ -40,7 +40,7 @@ object FirebaseUtils {
         } ?: onResult(emptyList(), 0)
     }
 
-    public fun calculateUpcomingEventCount(events: List<CulturalEvent>): Int {
+    fun calculateUpcomingEventCount(events: List<CulturalEvent>): Int {
         val today = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
@@ -55,8 +55,11 @@ object FirebaseUtils {
         return events.count { event ->
             val eventDateRange = event.date?.split("~")
             if (eventDateRange != null && eventDateRange.size == 2) {
-                val startDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(eventDateRange[0])
-                startDate?.after(today) == true || startDate == today
+                val startDate =
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(eventDateRange[0])
+                (startDate?.after(today) == true || startDate == today) && startDate.before(
+                    next30Days
+                )
             } else {
                 false
             }

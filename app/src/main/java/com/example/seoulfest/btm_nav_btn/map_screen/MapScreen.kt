@@ -386,6 +386,7 @@ private suspend fun fetchEvents(): List<CulturalEvent> {
             endIndex = 100,
             date = today
         )
+
         val events = response.events ?: emptyList()
         events.sortedBy {
             it.date?.split("~")?.get(0)?.let { date ->
